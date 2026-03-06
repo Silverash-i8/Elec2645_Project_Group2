@@ -218,6 +218,7 @@ int main(void)
     // Initialize Joystick
     Joystick_Init(&joystick_cfg);
     
+    
     // Clear screen
     LCD_Fill_Buffer(0);
     LCD_Refresh(&cfg0);

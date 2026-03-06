@@ -37,6 +37,8 @@ static void draw_tetris_grid(void);
 #include "LCD.h"
 #include "PWM.h"
 #include "Buzzer.h"
+#include "Score.h"
+#include "ST7789V2_Driver.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -217,6 +219,8 @@ static void lock_block(void) {
         buzzer_note(&buzzer_cfg, NOTE_G5, 45);
         HAL_Delay(140);
         buzzer_off(&buzzer_cfg);
+        // Update score: award 100 points per line cleared
+        Score_Add(lines_cleared * 100);
     } else {
         // Short landing beep
         buzzer_tone(&buzzer_cfg, 900, 35);
@@ -270,6 +274,8 @@ MenuState Game1_Run(void) {
 
     // Seed RNG and select first/next block
     srand(HAL_GetTick());
+    // Reset game-specific score tracker
+    Score_Reset();
     current_block.type = random_block();
     current_block.rotation = 0;
     current_block.row = 0;
@@ -364,16 +370,30 @@ MenuState Game1_Run(void) {
 
         // --- RENDER ---
         LCD_Fill_Buffer(0);
-        LCD_printString("TETRIS", 85, 8, 1, 3);
+        // Center the title horizontally
+        const char *title = "TETRIS";
+        size_t tlen = 0; while (title[tlen]) tlen++;
+        const uint8_t title_font = 3;
+        int title_x = (ST7789V2_WIDTH - (int)(tlen * 6 * title_font)) / 2;
+        if (title_x < 0) title_x = 0;
+        LCD_printString(title, title_x, 8, 1, title_font);
         draw_tetris_grid();
         draw_shadow();
         draw_block(current_block.type, current_block.rotation, current_block.row, current_block.col, 0);
         LCD_printString("Next:", NEXT_BLOCK_X, NEXT_BLOCK_Y - 18, 1, 2);
         draw_next_block();
         if (!game_over) {
-            LCD_printString("Push joystick", 40, 220, 1, 1);
-            LCD_printString("to hard drop", 40, 235, 1, 1);
+            // Ensure control text is positioned safely above the bottom of the screen
+            const uint8_t ctl_font = 1;
+            const uint16_t font_h = 7 * ctl_font; // font5x7 is 7 pixels high
+            const uint16_t margin = 6;
+            uint16_t y1 = ST7789V2_HEIGHT - (font_h * 2) - margin; // first line
+            uint16_t y2 = y1 + font_h + 3; // second line with small gap
+            LCD_printString("Push joystick", 40, y1, 1, ctl_font);
+            LCD_printString("to hard drop", 40, y2, 1, ctl_font);
         }
+        // Draw left-hand score panel
+        Score_Draw(&cfg0);
         LCD_Refresh(&cfg0);
 
         // --- BLOCK LANDED: next block ---
@@ -389,8 +409,21 @@ MenuState Game1_Run(void) {
                 // Show Game Over message
                 game_over = 1;
                 LCD_Fill_Buffer(0);
-                LCD_printString("GAME OVER", 60, 100, 2, 3);
-                LCD_printString("Press BT3", 70, 140, 1, 2);
+                // Center GAME OVER
+                const char *go = "GAME OVER";
+                size_t golen = 0; while (go[golen]) golen++;
+                const uint8_t go_font = 3;
+                int go_x = (ST7789V2_WIDTH - (int)(golen * 6 * go_font)) / 2;
+                if (go_x < 0) go_x = 0;
+                LCD_printString(go, go_x, 100, 2, go_font);
+                // Show final score below
+                char final_buf[32];
+                snprintf(final_buf, sizeof(final_buf), "Final score: %d", Score_Get());
+                size_t f_len = 0; while (final_buf[f_len]) f_len++;
+                const uint8_t f_font = 2;
+                int f_x = (ST7789V2_WIDTH - (int)(f_len * 6 * f_font)) / 2;
+                if (f_x < 0) f_x = 0;
+                LCD_printString(final_buf, f_x, 140, 1, f_font);
                 LCD_Refresh(&cfg0);
                 // Clear any existing button press so only a new press will exit
                 Input_Read();

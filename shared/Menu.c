@@ -46,7 +46,7 @@ static void render_home_menu(MenuSystem* menu) {
     
     // Instructions
     LCD_printString("Press BT3", 50, 240, 1, 1);
-    
+
     LCD_Refresh(&cfg0);
 }
 

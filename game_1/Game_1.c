@@ -357,7 +357,7 @@ MenuState Game1_Run(void) {
         }
 
         // --- BLOCK FALLING ---
-        uint32_t fall_interval = soft_drop ? 40 : 400;
+        uint32_t fall_interval = soft_drop ? 40 : 400; 
         if (now - last_fall > fall_interval) {
             if (can_place(current_block.type, current_block.rotation, current_block.row + 1, current_block.col)) {
                 current_block.row++;
@@ -432,7 +432,8 @@ MenuState Game1_Run(void) {
                     HAL_Delay(20);
                 }
 
-                // Play a melodic game-over sequence repeatedly until the user presses the joystick button.
+                // Play game-over music repeatedly until the user presses the joystick button.
+                
                 const Buzzer_Note_t melody[] = { NOTE_C5, NOTE_A4, NOTE_G4, NOTE_E4, NOTE_F4, NOTE_E4 };
                 const uint16_t m_dur[] = { 400, 300, 300, 300, 400, 400 };
                 const int m_len = sizeof(melody) / sizeof(melody[0]);

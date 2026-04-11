@@ -114,22 +114,6 @@ volatile uint32_t g_tim7_ticks = 0;
 // ===== BUTTON DEBOUNCING CONFIGURATION =====
 #define DEBOUNCE_DELAY 200  // 200ms debounce time
 
-// ===== TIMER CONFIGURATION =====
-// Available timers for student use:
-//
-// TIM2: PWM for Buzzer (1MHz tick, used by buzzer_cfg)
-// TIM4: PWM for LED control (1MHz tick, used by pwm_cfg)
-// TIM6: General purpose timer with interrupt (100Hz / 10ms period)
-//       - ISR processing is centralized in HAL_TIM_PeriodElapsedCallback(...)
-//       - Incrementing g_tim6_ticks every 10 ms while active
-// TIM7: General purpose timer with interrupt (1Hz / 1s period)
-//       - Configured for 1s interrupts (1 Hz)
-//       - Optional second scheduler (left commented in main init)
-//       - Incrementing g_tim7_ticks every 1 s while active
-//
-// Note: Both TIM6 and TIM7 are initialized but NOT started.
-//       Students should start them in their game with HAL_TIM_Base_Start_IT()
-//       and stop them with HAL_TIM_Base_Stop_IT() when returning to menu.
 
 
 // ===== UTILITY FUNCTIONS =====

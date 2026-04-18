@@ -59,6 +59,16 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/game_1/Game_1.c
     ${CMAKE_SOURCE_DIR}/game_2/Game_2.c
     ${CMAKE_SOURCE_DIR}/game_3/Game_3.c
+
+    # Game 2 Implementations
+    ${CMAKE_SOURCE_DIR}/game_2/Menus/Tank_1990_Menu.c
+    ${CMAKE_SOURCE_DIR}/game_2/Menus/Pause_Menu.c
+    ${CMAKE_SOURCE_DIR}/game_2/TankEngine/TankEngine.c
+    ${CMAKE_SOURCE_DIR}/game_2/Tank/Tank.c
+    ${CMAKE_SOURCE_DIR}/game_2/Enemy/Enemy.c
+    ${CMAKE_SOURCE_DIR}/game_2/Bullet/Bullet.c
+    ${CMAKE_SOURCE_DIR}/game_2/Bullet/Explosion.c
+    ${CMAKE_SOURCE_DIR}/game_2/Map/Map.c
 )
 
 # Add include paths
@@ -79,6 +89,15 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/game_1
     ${CMAKE_SOURCE_DIR}/game_2
     ${CMAKE_SOURCE_DIR}/game_3
+
+    # Game 2 specific includes
+    ${CMAKE_SOURCE_DIR}/game_2/Menus
+    ${CMAKE_SOURCE_DIR}/game_2/TankEngine
+    ${CMAKE_SOURCE_DIR}/game_2/Tank
+    ${CMAKE_SOURCE_DIR}/game_2/Enemy
+    ${CMAKE_SOURCE_DIR}/game_2/Bullet
+    ${CMAKE_SOURCE_DIR}/game_2/Map
+    ${CMAKE_SOURCE_DIR}/game_2/Sprites
 )
 
 # Add project symbols (macros)

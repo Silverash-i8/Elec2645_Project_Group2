@@ -19,7 +19,7 @@ typedef struct {
     uint32_t last_shot_time;        // Time of last shot
     uint16_t shoot_interval;        // Interval between shots (ms)
     uint8_t move_counter;           // Counter for AI movement decisions
-    uint8_t behavior;               // Behavior type (0=random, 1=towards player)
+    uint8_t behavior;               // Behavior type (0=towards player, 1=towards base)
     uint8_t alive;                  // 1 if alive, 0 if destroyed
     uint32_t chase_start_time;      // Time when chase behavior started
     uint8_t chase_direction_index;  // Current direction in chase cycle (0-3)

@@ -24,51 +24,38 @@ Bullet_t* Enemy_Update(Enemy_t* enemy, uint16_t player_x, uint16_t player_y, uin
 
     // Simple AI: change direction every 40 frames based on target location
     enemy->move_counter++;
-    if (enemy->move_counter > 40) {
+    if (enemy->move_counter > 20) {
         enemy->move_counter = 0;
-        
+        uint16_t target_x, target_y;
         if (enemy->behavior == 0) {
-            // Random behavior
-            uint8_t rand_dir = HAL_GetTick() % 4;
-            enemy->tank.direction = rand_dir;
+            // Chase Target : towards player
+            target_x = player_x;
+            target_y = player_y;
         } else if (enemy->behavior == 1) {
-            // Chase behavior: half target player, half target base
-            uint16_t target_x, target_y;
-            
-            // Even-indexed enemies (0, 2, 4) chase the base
-            // Odd-indexed enemies (1, 3, 5) chase the player
-            if (enemy_index % 2 == 0) {
-                // Target base
-                target_x = base_x;
-                target_y = base_y;
+            target_x = base_x;
+            target_y = base_y; 
+        }
+        // Calculate best direction towards target
+        int16_t dx = target_x - enemy->tank.x;
+        int16_t dy = target_y - enemy->tank.y;
+        
+        // Determine direction based on which distance is greater
+        if (dx * dx + dy * dy == 0) {
+            // Already at target, stay still
+            enemy->tank.direction = 0;
+        } else if (dx * dx > dy * dy) {
+            // Move horizontally
+            if (dx > 0) {
+                enemy->tank.direction = 1; // Right
             } else {
-                // Target player
-                target_x = player_x;
-                target_y = player_y;
+                enemy->tank.direction = 3; // Left
             }
-            
-            // Calculate best direction towards target
-            int16_t dx = target_x - enemy->tank.x;
-            int16_t dy = target_y - enemy->tank.y;
-            
-            // Determine direction based on which distance is greater
-            if (dx * dx + dy * dy == 0) {
-                // Already at target, stay still
-                enemy->tank.direction = 0;
-            } else if (dx * dx > dy * dy) {
-                // Move horizontally
-                if (dx > 0) {
-                    enemy->tank.direction = 1; // Right
-                } else {
-                    enemy->tank.direction = 3; // Left
-                }
+        } else {
+            // Move vertically
+            if (dy > 0) {
+                enemy->tank.direction = 2; // Down
             } else {
-                // Move vertically
-                if (dy > 0) {
-                    enemy->tank.direction = 2; // Down
-                } else {
-                    enemy->tank.direction = 0; // Up
-                }
+                enemy->tank.direction = 0; // Up
             }
         }
     }
@@ -79,9 +66,9 @@ Bullet_t* Enemy_Update(Enemy_t* enemy, uint16_t player_x, uint16_t player_y, uin
     
     switch (enemy->tank.direction) {
         case 0: input.direction = N; break;
-        case 1: input.direction = E; break;
+        case 1: input.direction = W; break;
         case 2: input.direction = S; break;
-        case 3: input.direction = W; break;
+        case 3: input.direction = E; break;
     }
 
     // Update enemy tanks position

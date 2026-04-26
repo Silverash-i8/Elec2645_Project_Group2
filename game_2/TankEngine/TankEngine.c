@@ -128,15 +128,15 @@ void TankEngine_Init(TankEngine_t* engine, uint16_t start_x, uint16_t start_y, i
         uint8_t behavior;
     } spawn_positions[MAX_ENEMIES] = {
         // Top-left corner
-        {40, MAP_OFFSET_Y + 40, 1},
+        {60, MAP_OFFSET_Y + 40, 0},
         // Top-right corner
         {MAP_WIDTH * TILE_SIZE - 60, MAP_OFFSET_Y + 40, 1},
         // Bottom-left corner
-        {70, MAP_OFFSET_Y + MAP_HEIGHT * TILE_SIZE - 60, 1},
+        {70, MAP_OFFSET_Y + MAP_HEIGHT * TILE_SIZE - 60, 0},
         // Bottom-right corner
         {MAP_WIDTH * TILE_SIZE - 30, MAP_OFFSET_Y + MAP_HEIGHT * TILE_SIZE - 30, 1},
         // Middle-top (for medium/hard modes)
-        {MAP_WIDTH * TILE_SIZE / 2, MAP_OFFSET_Y + 60, 1},
+        {MAP_WIDTH * TILE_SIZE / 2 + 40, MAP_OFFSET_Y + 60, 0},
         // Middle-bottom (for hard mode only)
         {MAP_WIDTH * TILE_SIZE / 2, MAP_OFFSET_Y + MAP_HEIGHT * TILE_SIZE - 70, 1}
     };

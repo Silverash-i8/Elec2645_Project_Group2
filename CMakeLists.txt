@@ -19,7 +19,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Core project settings
-project(Unit_4_1_Menu_Template-main)
+project(ELEC2645_Project_Group2)
 
 # Enable compile command to ease indexing with e.g. clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
@@ -57,6 +57,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     
     # Game implementations (placeholder - students implement these)
     ${CMAKE_SOURCE_DIR}/game_1/Game_1.c
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Pieces.c
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Logic.c
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Render.c
     ${CMAKE_SOURCE_DIR}/game_2/Game_2.c
     ${CMAKE_SOURCE_DIR}/game_3/Game_3.c
 

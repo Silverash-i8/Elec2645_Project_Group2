@@ -11,16 +11,20 @@
 typedef struct {
     float x, y;
     float vx, vy;
+    float damage;
     bool active;
 } Bullet;
 
 // Sets all bullets to inactive at game start
-void Bullet_Init(void);
+void Bullet3_Init(void);
 
 // Logic to move bullets and deactivate them if they leave the screen
-void Bullet_Update(void);
+void Bullet3_Update(void);
 
 // This is the auto-fire function that spawns bullets at regular intervals
-void Bullet_Spawn(float x, float y, float vx, float vy);
+void Bullet3_Spawn(float x, float y, float vx, float vy, float damage);
+
+// Get pointer to bullet pool for collision detection
+Bullet* Bullet3_GetPool(void);
 
 #endif

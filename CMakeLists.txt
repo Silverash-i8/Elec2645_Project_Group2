@@ -63,6 +63,17 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/game_2/Game_2.c
     ${CMAKE_SOURCE_DIR}/game_3/Game_3.c
 
+    # Game 3 Implementations
+    ${CMAKE_SOURCE_DIR}/game_3/BULLETS/Bullets.c
+    ${CMAKE_SOURCE_DIR}/game_3/ENEMY/Enemy.c
+    ${CMAKE_SOURCE_DIR}/game_3/PLAYER/Player.c
+    ${CMAKE_SOURCE_DIR}/game_3/CAMERA/Camera.c
+    ${CMAKE_SOURCE_DIR}/game_3/COLLISION/Collision.c
+    ${CMAKE_SOURCE_DIR}/game_3/RENDER/Render.c
+    ${CMAKE_SOURCE_DIR}/game_3/GAME_STATE/GameState.c
+    ${CMAKE_SOURCE_DIR}/game_3/SPAWNING/Spawning.c
+    ${CMAKE_SOURCE_DIR}/game_3/MAP/Map.c
+
     # Game 2 Implementations
     ${CMAKE_SOURCE_DIR}/game_2/Menus/Tank_1990_Menu.c
     ${CMAKE_SOURCE_DIR}/game_2/Menus/Pause_Menu.c
@@ -93,11 +104,20 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/game_2
     ${CMAKE_SOURCE_DIR}/game_3
 
+    # Game 3 specific includes
+    ${CMAKE_SOURCE_DIR}/game_3/BULLETS
+    ${CMAKE_SOURCE_DIR}/game_3/ENEMY
+    ${CMAKE_SOURCE_DIR}/game_3/PLAYER
+    ${CMAKE_SOURCE_DIR}/game_3/CAMERA
+    ${CMAKE_SOURCE_DIR}/game_3/COLLISION
+    ${CMAKE_SOURCE_DIR}/game_3/RENDER
+    ${CMAKE_SOURCE_DIR}/game_3/GAME_STATE
+    ${CMAKE_SOURCE_DIR}/game_3/SPAWNING
+
     # Game 2 specific includes
     ${CMAKE_SOURCE_DIR}/game_2/Menus
     ${CMAKE_SOURCE_DIR}/game_2/TankEngine
     ${CMAKE_SOURCE_DIR}/game_2/Tank
-    ${CMAKE_SOURCE_DIR}/game_2/Enemy
     ${CMAKE_SOURCE_DIR}/game_2/Bullet
     ${CMAKE_SOURCE_DIR}/game_2/Map
     ${CMAKE_SOURCE_DIR}/game_2/Sprites

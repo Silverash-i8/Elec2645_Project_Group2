@@ -114,6 +114,7 @@ void update_game_logic(uint32_t current_time) {
 void render_game() {
     Render_ClearScreen();
     Render_Map(camera_x, camera_y);
+    Render_Obstacles();
     Render_Player();
     Render_Bullets();
     Render_Enemies();
@@ -150,10 +151,16 @@ MenuState Game3_Run(void) {
         Input_Read();
 
         // Check exit condition
-        if (current_input.btn3_pressed || GameState_IsGameOver()) {
+        // Check exit condition (Now ONLY triggers on death)
+        if (GameState_IsGameOver()) {
             PWM_SetDuty(&pwm_cfg, 50);
             exit_state = MENU_STATE_HOME;
             break;
+        }
+
+        // Check Dash Input
+        if (current_input.btn3_pressed) {
+            Player_Dash();
         }
 
         // Update game logic

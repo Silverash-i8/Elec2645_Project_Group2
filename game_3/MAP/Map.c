@@ -3,9 +3,36 @@
 #include "../CAMERA/Camera.h"
 #include <math.h>
 #include <stdint.h>
+#include <stdlib.h> // Needed for rand()
+
+// The static memory pool for your obstacles
+static Obstacle obstacle_pool[MAX_OBSTACLES];
 
 void Map3_Init(void) {
-    // No persistent map state needed for simple grass background
+    for (int i = 0; i < MAX_OBSTACLES; i++) {
+        obstacle_pool[i].active = true;
+        
+        if (i == 0) {
+            // FORCE the first obstacle to spawn right in front of the player
+            obstacle_pool[i].x = 40; 
+            obstacle_pool[i].y = 40;
+            obstacle_pool[i].size = 30; // Make it big
+        } else {
+            // Scatter the rest randomly but closer together (-500 to 500)
+            obstacle_pool[i].x = (rand() % 1000) - 500; 
+            obstacle_pool[i].y = (rand() % 1000) - 500;
+            obstacle_pool[i].size = 15 + (rand() % 16); 
+            
+            if (fabs(obstacle_pool[i].x) < 50 && fabs(obstacle_pool[i].y) < 50) {
+                obstacle_pool[i].x += 100;
+            }
+        }
+    }
+}
+
+// Return the pool so the Renderer can draw them
+Obstacle* Map3_GetObstacles(void) {
+    return obstacle_pool;
 }
 
 void Map3_Draw(float camera_x, float camera_y) {

@@ -12,5 +12,6 @@ void Render_Bullets(void);
 void Render_Enemies(void);
 void Render_UI(void);
 void Render_Present(void);
+void Render_Obstacles(void);
 
 #endif // RENDER_H

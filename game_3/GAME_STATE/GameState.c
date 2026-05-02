@@ -11,7 +11,7 @@ void GameState_Init(void) {
 
 void GameState_Update(uint32_t current_time) {
     // Wave management
-    if (GameState_ShouldSpawnWave(current_time)) {
+   if (GameState_ShouldSpawnWave(current_time)) {
         player.wave++;
         GameState_StartNewWave(player.wave);
     }
@@ -24,7 +24,7 @@ bool GameState_ShouldSpawnWave(uint32_t current_time) {
 void GameState_StartNewWave(int wave_number) {
     player.wave = wave_number;
     player.wave_timer = HAL_GetTick();
-    Spawning_SpawnEnemyWave(player.wave);
+    Spawning_SpawnEnemyWave(wave_number);
 }
 
 bool GameState_IsGameOver(void) {

@@ -18,6 +18,7 @@ void Player_Init(void) {
     player.last_shot = 0;
     player.wave_timer = HAL_GetTick();
     player.enemy_spawn_timer = HAL_GetTick();
+    player.last_dash = 0;
     player.direction = 0; // Start facing up
 }
 
@@ -30,7 +31,7 @@ void Player_Move(float dx, float dy) {
     else if (dx < -0.1f) player.direction = 3; // left
     else if (dy > 0.1f) player.direction = 2; // down
     else if (dy < -0.1f) player.direction = 0; // up
-    // If no movement, keep previous direction
+   
 }
 
 void Player_TakeDamage(float damage) {
@@ -47,6 +48,27 @@ bool Player_IsAlive(void) {
 }
 
 void Player_UpdateTimers(uint32_t current_time) {
-    // This function can be expanded if needed for timer management
-    (void)current_time; // Suppress unused parameter warning
+    (void)current_time;
+}
+
+void Player_Dash(void) {
+    uint32_t current_time = HAL_GetTick();
+    
+    // 1. Check Cooldown
+    if (current_time - player.last_dash < DASH_COOLDOWN) {
+        return; // Too soon to dash again
+    }
+
+    switch(player.direction) {
+        case 0: player.y -= DASH_DISTANCE; break; // Up
+        case 1: player.x += DASH_DISTANCE; break; // Right
+        case 2: player.y += DASH_DISTANCE; break; // Down
+        case 3: player.x -= DASH_DISTANCE; break; // Left
+    }
+
+    // 2. Reset the timer
+    player.last_dash = current_time;
+    
+    // 3. Play dash sound effect
+
 }

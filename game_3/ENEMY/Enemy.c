@@ -23,14 +23,14 @@ void Enemy3_Spawn(float x, float y, EnemyType type) {
                 case SHAMBLER:
                     enemy_pool[i].hp = 2.0f;
                     enemy_pool[i].max_hp = 2.0f;
-                    enemy_pool[i].speed = 1.0f;
+                    enemy_pool[i].speed = 2.0f;
                     enemy_pool[i].damage = 10.0f;
                     enemy_pool[i].size = 8;
                     break;
                 case VECTOR:
                     enemy_pool[i].hp = 1.0f;
                     enemy_pool[i].max_hp = 1.0f;
-                    enemy_pool[i].speed = 2.2f;
+                    enemy_pool[i].speed = 4.2f;
                     enemy_pool[i].damage = 5.0f;
                     enemy_pool[i].size = 8;
                     break;

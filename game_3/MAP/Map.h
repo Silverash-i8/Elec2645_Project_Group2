@@ -4,10 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define MAP_TILE_SIZE 20
-#define MAX_OBSTACLES 30 // 30 obstacles scattered around
+#define MAX_OBSTACLES 30 
 
-// The structure for our rocks/crates
 typedef struct {
     float x, y;
     int size;
@@ -16,9 +14,6 @@ typedef struct {
 
 void Map3_Init(void);
 void Map3_Draw(float camera_x, float camera_y);
-uint8_t Map3_GetTileColor(int tile_x, int tile_y);
-
-// NEW: Let other files access the obstacles
 Obstacle* Map3_GetObstacles(void);
 
 #endif // MAP_H

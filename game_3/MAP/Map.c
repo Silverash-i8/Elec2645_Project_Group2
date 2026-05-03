@@ -13,7 +13,7 @@ void Map3_Init(void) {
         obstacle_pool[i].active = true;
         
         if (i == 0) {
-            // FORCE the first obstacle to spawn right in front of the player
+            // Spawn a rock next to the player to check if obstacles actually spawn
             obstacle_pool[i].x = 40; 
             obstacle_pool[i].y = 40;
             obstacle_pool[i].size = 30; // Make it big
@@ -37,7 +37,7 @@ Obstacle* Map3_GetObstacles(void) {
 
 void Map3_Draw(float camera_x, float camera_y) {
     const int grid_step = 40;
-    const uint8_t grid_color = 15; // White grid
+    const uint8_t grid_color = 1; // White grid
 
     float first_x = floorf(camera_x / grid_step) * grid_step;
     float first_y = floorf(camera_y / grid_step) * grid_step;

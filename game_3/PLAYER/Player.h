@@ -23,6 +23,10 @@ typedef struct {
     uint32_t wave_timer;
     uint32_t enemy_spawn_timer;
     uint32_t last_dash;
+    bool is_dashing;
+    uint32_t dash_duration_timer; 
+    float dash_vx; // Dash velocity X
+    float dash_vy; // Dash velocity Y
     int direction;     
 } Player;
 
@@ -36,6 +40,5 @@ void Player_TakeDamage(float damage);
 void Player_AddScore(int points);
 bool Player_IsAlive(void);
 void Player_UpdateTimers(uint32_t current_time);
-void Player_Dash(void);
-
+void Player_StartDash(float joy_x, float joy_y);
 #endif // PLAYER_H

@@ -29,7 +29,9 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 enable_language(C ASM)
 
 # Create an executable object type
-add_executable(${CMAKE_PROJECT_NAME})
+add_executable(${CMAKE_PROJECT_NAME}
+    game_3/POWERUp/PowerUp.h
+    game_3/POWERUp/PowerUp.c)
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
@@ -73,6 +75,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/game_3/GAME_STATE/GameState.c
     ${CMAKE_SOURCE_DIR}/game_3/SPAWNING/Spawning.c
     ${CMAKE_SOURCE_DIR}/game_3/MAP/Map.c
+    ${CMAKE_SOURCE_DIR}/game_3/Game3Menu/Game3_Menu.c
 
     # Game 2 Implementations
     ${CMAKE_SOURCE_DIR}/game_2/Menus/Tank_1990_Menu.c

@@ -1,5 +1,5 @@
 #include "Tank.h"
-#include "Joystick.h"
+#include "Joystick.h" 
 #include "../Map/Map.h"
 #include "LCD.h"
 #include "green_tank_sprites.h"
@@ -11,7 +11,6 @@ void Tank_Init(Tank_t* tank, uint16_t x, uint16_t y, int16_t speed, uint8_t dire
     tank->speed = speed;
     tank->direction = direction;
     tank->alive = 1;
-    tank->animation_frame = 0; // Start with IDLE frame
 }
 void Tank_Update(Tank_t* tank, UserInput input){
     if (!tank->alive) return; // Do not update if tank is destroyed
@@ -21,19 +20,19 @@ void Tank_Update(Tank_t* tank, UserInput input){
     if (input.direction == N || input.direction == NE || input.direction == NW) {
         intended_direction = 0; // UP
     }
-    else if (input.direction == W ) {
+    else if (input.direction == E) {
         intended_direction = 1; // RIGHT
     }
     else if (input.direction == S || input.direction == SE || input.direction == SW) {
         intended_direction = 2; // DOWN
     }
-    else if (input.direction == E ) {
+    else if (input.direction == W) {
         intended_direction = 3; // LEFT
     }
     else {
         return;  // If there's no input, exit early
     }
-    //Important concept from Tank 1990: the tank only changes direction when the joystick input changes, but does not move until the next update. This mimics the original game's mechanics.
+    // Important concept from Tank 1990: the tank only changes direction when the joystick input changes, but does not move until the next update. This mimics the original game's mechanics.
     if (tank->direction != intended_direction) {
         // Change the facing direction, but DO NOT move this frame!
         tank->direction = intended_direction;
@@ -77,8 +76,6 @@ void Tank_Update(Tank_t* tank, UserInput input){
     {
         tank->x = new_x;
         tank->y = new_y;
-        // Animate tracks when moving
-        tank->animation_frame = (tank->animation_frame + 1) % 2;
     }
 }
 void Tank_Draw(Tank_t* tank) {
@@ -90,8 +87,6 @@ void Tank_Draw(Tank_t* tank) {
     
     // Select sprite based on tank direction
     const uint8_t* sprite_data = NULL;
-    uint16_t sprite_width = GREEN_TANK_WIDTH;
-    uint16_t sprite_height = GREEN_TANK_HEIGHT;
     
     switch (tank->direction) {
         case 0: sprite_data = (const uint8_t*)green_tank_up_data; break;       // UP
@@ -103,6 +98,6 @@ void Tank_Draw(Tank_t* tank) {
     
     // Draw the tank sprite
     if (sprite_data != NULL) {
-        LCD_Draw_Sprite(x_pos, y_pos, sprite_height, sprite_width, sprite_data);
+        LCD_Draw_Sprite(x_pos, y_pos, GREEN_TANK_HEIGHT, GREEN_TANK_WIDTH, sprite_data);
     }
 }

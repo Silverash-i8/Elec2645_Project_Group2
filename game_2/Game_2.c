@@ -41,7 +41,7 @@ static uint32_t get_timer_period(uint32_t interval_ms)
     return (interval_ms * 10) - 1;
 }
 
-static void get_enemies_count_by_difficulty(TankEngine_t* engine, Start2MenuState difficulty) {
+static void set_enemies_count_by_difficulty(TankEngine_t* engine, Game2MenuState difficulty) {
     // Difficulty determines how many/where enemies spawn
     // Easy: fewer enemies, Medium: more, Hard: more aggressive
     switch(difficulty) {
@@ -60,9 +60,6 @@ static void get_enemies_count_by_difficulty(TankEngine_t* engine, Start2MenuStat
     }
 }
 
-/**
- * @brief Display the game controls/instructions page
- */
 void ShowInstructionsPage(void) {
     LCD_Fill_Buffer(0);
     LCD_printString("== CONTROLS ==", 30, 20, 4, 2);
@@ -79,10 +76,7 @@ void ShowInstructionsPage(void) {
     HAL_Delay(3000);  // Display for 3 seconds
 }
 
-/**
- * @brief Display the mission objectives and difficulty board
- */
-void ShowMissionBoardPage(Start2MenuState difficulty) {
+void ShowMissionBoardPage(Game2MenuState difficulty) {
     LCD_Fill_Buffer(0);
     
     char level_text[32];
@@ -108,9 +102,6 @@ void ShowMissionBoardPage(Start2MenuState difficulty) {
     HAL_Delay(3000);  // Display for 3 seconds
 }
 
-/**
- * @brief Display the mission accomplished victory page and wait for input
- */
 void ShowMissionAccomplishedPage(void) {
     // Play victory melody (Victory/Success tone)
     buzzer_note(&buzzer_cfg, NOTE_G4, 50);
@@ -159,9 +150,6 @@ void ShowMissionAccomplishedPage(void) {
     }
 }
 
-/**
- * @brief Display the game over page and wait for input
- */
 void ShowGameOverPage(void) {
     // Play game over melody (Sad tone)
     buzzer_note(&buzzer_cfg, NOTE_C5, 70);
@@ -214,13 +202,15 @@ void ShowGameOverPage(void) {
         HAL_Delay(100);
     }
 }
+
 MenuState Game2_Run(void) {
     // Initialize menu system
     MenuSystem difficulty_menu;
-    Game_Menu_Init(&difficulty_menu);
+    // Initialize difficulty selection menu
+    Game2_Menu_Init(&difficulty_menu);
     
     // Show difficulty menu
-    Start2MenuState selected_difficulty = Game_Menu_Run(&difficulty_menu);
+    Game2MenuState selected_difficulty = Game2_Menu_Run(&difficulty_menu);
 
     // Check if user quit
     if (selected_difficulty == GAME2_MENU_QUIT) {
@@ -244,10 +234,10 @@ MenuState Game2_Run(void) {
     } else if (selected_difficulty == GAME2_MENU_HARD) {
         Map_Init_Hard();
     }
-    // Spawn enemies based on selected difficulty
-    get_enemies_count_by_difficulty(&game_engine, selected_difficulty);
+    // Set enemies based on selected difficulty
+    set_enemies_count_by_difficulty(&game_engine, selected_difficulty);
     
-    // Start tank at bottom-left of map
+    // Tank engine initialization with player starting position (bottom center of map)
     TankEngine_Init(&game_engine, 25, 220, TANK_SPEED, 0);  // 0 = facing up
  
     // Play startup melody (Mario Bros inspired)
@@ -271,7 +261,7 @@ MenuState Game2_Run(void) {
     HAL_TIM_Base_Init(&htim6);
     HAL_TIM_Base_Start_IT(&htim6);  // Start with interrupts enabled
 
-    Start2MenuState exit_state = MENU_STATE_HOME;
+    MenuState exit_state = MENU_STATE_HOME;
 
     // Main game loop - waits for frame timer interrupt
     while (1) {
@@ -301,7 +291,7 @@ MenuState Game2_Run(void) {
             // Display mission accomplished page
             ShowMissionAccomplishedPage();
             
-            exit_state = MENU_STATE_HOME;
+            exit_state = MENU_STATE_GAME_2;
             break;
         }
         // Check if game is over (player lost all lives or base destroyed)
@@ -312,7 +302,7 @@ MenuState Game2_Run(void) {
             // Display game over page
             ShowGameOverPage();
             
-            exit_state = MENU_STATE_HOME;
+            exit_state = MENU_STATE_GAME_2;
             break;
         }
 

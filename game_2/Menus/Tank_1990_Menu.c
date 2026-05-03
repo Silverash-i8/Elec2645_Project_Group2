@@ -1,7 +1,6 @@
 #include "Tank_1990_Menu.h"
-#include "Menu.h"  // For MenuSystem definition
 #include "LCD.h"
-#include "Shared/InputHandler.h"
+#include "InputHandler.h"
 #include "Joystick.h"
 #include "stm32l4xx_hal.h"
 #include <stdio.h>
@@ -58,13 +57,13 @@ static void render_home_menu(MenuSystem* menu) {
 // PUBLIC API IMPLEMENTATION
 // ==============================================
 
-void Game_Menu_Init(MenuSystem* menu) {
+void Game2_Menu_Init(MenuSystem* menu) {
     menu->selected_option = 0;
 }
 
-Start2MenuState Game_Menu_Run(MenuSystem* menu) {
+Game2MenuState Game2_Menu_Run(MenuSystem* menu) {
     static Direction last_direction = CENTRE;  // Track last direction for debouncing
-    Start2MenuState selected_game = GAME2_MENU_HOME;  // Which game was selected
+    Game2MenuState selected_game = GAME2_MENU_HOME;  // Which game was selected
     
     // Menu's own loop - runs until game is selected
     while (1) {

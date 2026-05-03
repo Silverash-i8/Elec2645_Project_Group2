@@ -6,6 +6,8 @@
 
 static TileType gameMap[MAP_HEIGHT][MAP_WIDTH];
 
+// All maps are hardcoded for simplicity
+
 void Map_Init_Easy() {
     // Initialize the map with empty tiles
     for (int row = 0; row < MAP_HEIGHT; row++) {
@@ -13,7 +15,7 @@ void Map_Init_Easy() {
             gameMap[row][col] = TILE_EMPTY;
         }
     }
-    
+
     // Fewer bricks for easy difficulty
     // Brick Group 1 - L-shape in top-left (smaller)
     for(int row = 6; row < 8; row++){
@@ -199,6 +201,7 @@ void Map_Init_Hard() {
     // Place the base in the center bottom
     gameMap[MAP_HEIGHT - 1][MAP_WIDTH / 2] = TILE_BASE;
 }
+
 void Map_Draw(uint8_t base_health) {
     for (int row = 0; row < MAP_HEIGHT; row++) {
         for (int col = 0; col < MAP_WIDTH; col++) {
@@ -210,12 +213,12 @@ void Map_Draw(uint8_t base_health) {
                     LCD_Draw_Rect(x, y, TILE_SIZE, TILE_SIZE, 0, 1);
                     break;
                 case TILE_BRICK:
-                    // Draw brick sprite (indexed colors)
-                    LCD_Draw_Sprite(x, y, 10, 10, (const uint8_t *)brick_data);
+                    // Draw brick sprite 
+                    LCD_Draw_Sprite(x, y, BRICK_FRAME_WIDTH, BRICK_FRAME_HEIGHT, (const uint8_t *)brick_data);
                     break;
                 case TILE_STEEL:
-                    // Draw steel sprite (metallic indexed colors)
-                    LCD_Draw_Sprite(x, y, 10, 10, (const uint8_t *)steel_data);
+                    // Draw steel sprite 
+                    LCD_Draw_Sprite(x, y, STEEL_FRAME_WIDTH, STEEL_FRAME_HEIGHT, (const uint8_t *)steel_data);
                     break;
                 case TILE_BASE:
                     // Draw base sprite only if it hasn't been destroyed
@@ -242,7 +245,7 @@ uint8_t Map_IsSolid(uint8_t row, uint8_t col) {
 }
 void Map_DestroyTile(uint8_t row, uint8_t col) {
         if (gameMap[row][col] == TILE_BRICK || gameMap[row][col] == TILE_BASE) {
-            gameMap[row][col] = TILE_EMPTY; // Destroy brick or Base
+            gameMap[row][col] = TILE_EMPTY; // Destroy Brick or Base
         }
         // Steel cannot be destroyed
 }

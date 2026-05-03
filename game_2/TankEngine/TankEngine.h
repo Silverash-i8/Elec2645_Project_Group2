@@ -1,20 +1,17 @@
 /**
  * @file TankEngine.h
  * @brief Main game engine for Tank 1990 game
- * Coordinates tank and map updates, handles collisions,
- * and manages game state (lives/score).
+ * Coordinates tank and map updates, handles collisions, and manages game state.
  */
 
 #ifndef TANKENGINE_H
 #define TANKENGINE_H
 
 #include <stdint.h>
-#include <sys/_types.h>
 #include "../Tank/Tank.h"
 #include "../Map/Map.h"
 #include "../Bullet/Bullet.h"
 #include "../Enemy/Enemy.h"
-#include "Utils.h"
 #include "Joystick.h"
 /**
  * @struct TankEngine_t
@@ -113,4 +110,26 @@ uint8_t TankEngine_IsGameOver(TankEngine_t* engine);
  */
 uint8_t TankEngine_PlayerWon(TankEngine_t* engine);
 
-#endif // TANKENGINE_H
+/**
+ * @brief Checks for collision between a circle and an axis-aligned rectangle.
+ * * @param circleX   Center X of the circle
+ * @param circleY   Center Y of the circle
+ * @param radius    Radius of the circle
+ * @param rectX     Center X of the rectangle
+ * @param rectY     Center Y of the rectangle
+ * @param rectW     Total width of the rectangle
+ * @param rectH     Total height of the rectangle
+ * @return uint8_t  1 if colliding, 0 if not
+ */
+uint8_t CheckCircleRectCollision(int16_t circleX, int16_t circleY, uint16_t radius,
+                                 int16_t rectX,   int16_t rectY,   uint16_t rectW, uint16_t rectH);
+/**
+ * @brief Check if bullet hits a tank
+ */
+uint8_t BulletHitsTank(Bullet_t* bullet, Tank_t* tank);
+/**
+ * @brief Find first available bullet slot
+ */
+int16_t FindAvailableBulletSlot(TankEngine_t* engine);
+
+#endif

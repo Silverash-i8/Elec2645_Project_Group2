@@ -4,11 +4,10 @@
 #include <stdint.h>
 
 /* Brick sprite dimensions */
-#define BRICK_FRAME_COUNT 1
 #define BRICK_FRAME_WIDTH 10
 #define BRICK_FRAME_HEIGHT 10
 
-/* Piskel data for "brick" */
+/* Sprite data for "brick" */
 const uint8_t brick_data[10][10] = {
     { 12, 12, 12, 12, 12, 13, 12, 12, 12, 12 },
     { 2, 2, 2, 2, 2, 13, 12, 12, 2, 2 },

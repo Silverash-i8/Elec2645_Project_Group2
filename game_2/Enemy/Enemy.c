@@ -5,6 +5,7 @@
 
 #include "Enemy.h"
 #include "LCD.h"
+#include "Joystick.h"
 #include "../Sprites/red_tank_sprites.h"
 #include <stdlib.h>
 
@@ -17,12 +18,34 @@ void Enemy_Init(Enemy_t* enemy, uint16_t x, uint16_t y, uint8_t behavior) {
     enemy->alive = 1;
 }
 
+// Hardcoded Enemy spawn positions (can be expanded for more enemies)
+// Spawned in safe corners away from bricks
+const SpawnPosition_t enemy_spawn_positions[MAX_ENEMIES] = {
+    // Top-left corner
+    {60, MAP_OFFSET_Y + 40, 0},
+
+    // Top-right corner
+    {MAP_WIDTH * TILE_SIZE - 60, MAP_OFFSET_Y + 40, 1},
+
+    // Bottom-left corner
+    {70, MAP_OFFSET_Y + MAP_HEIGHT * TILE_SIZE - 60, 0},
+
+    // Bottom-right corner
+    {MAP_WIDTH * TILE_SIZE - 30, MAP_OFFSET_Y + MAP_HEIGHT * TILE_SIZE - 30, 1},
+
+    // Middle-top
+    {MAP_WIDTH * TILE_SIZE / 2 + 40, MAP_OFFSET_Y + 60, 0},
+
+    // Middle-bottom
+    {MAP_WIDTH * TILE_SIZE / 2, MAP_OFFSET_Y + MAP_HEIGHT * TILE_SIZE - 70, 1}
+};
+
 Bullet_t* Enemy_Update(Enemy_t* enemy, uint16_t player_x, uint16_t player_y, uint16_t base_x, uint16_t base_y, uint8_t enemy_index, uint32_t current_time) {
     if (!enemy->alive) {
         return NULL;
     }
 
-    // Simple AI: change direction every 40 frames based on target location
+    // Simple AI: change direction every 20 frames based on target location
     enemy->move_counter++;
     if (enemy->move_counter > 20) {
         enemy->move_counter = 0;
@@ -66,9 +89,9 @@ Bullet_t* Enemy_Update(Enemy_t* enemy, uint16_t player_x, uint16_t player_y, uin
     
     switch (enemy->tank.direction) {
         case 0: input.direction = N; break;
-        case 1: input.direction = W; break;
+        case 1: input.direction = E; break;
         case 2: input.direction = S; break;
-        case 3: input.direction = E; break;
+        case 3: input.direction = W; break;
     }
 
     // Update enemy tanks position
@@ -81,7 +104,6 @@ Bullet_t* Enemy_Update(Enemy_t* enemy, uint16_t player_x, uint16_t player_y, uin
         // Return signal that enemy wants to shoot (caller will manage bullet pool)
         new_bullet = (Bullet_t*)1; // Signal that bullet should be created
     }
-
     return new_bullet;
 }
 

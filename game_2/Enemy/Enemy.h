@@ -2,7 +2,7 @@
  * @file Enemy.h
  * @brief Enemy Tank system for Tank 1990 game
  * 
- * Manages AI-controlled enemy tanks with movement and firing behavior.
+ * Manages AI-controlled enemy tanks with chase movement and firing behavior.
  */
 
 #ifndef ENEMY_H
@@ -11,8 +11,10 @@
 #include <stdint.h>
 #include "../Tank/Tank.h"
 #include "../Bullet/Bullet.h"
+#include "../Map/Map.h"
 #define MAX_ENEMIES 6              // Maximum number of enemies on screen
 #define ENEMY_SHOOT_INTERVAL 1000  // ms between shots
+
 
 typedef struct {
     Tank_t tank;                    // Tank object
@@ -21,9 +23,17 @@ typedef struct {
     uint8_t move_counter;           // Counter for AI movement decisions
     uint8_t behavior;               // Behavior type (0=towards player, 1=towards base)
     uint8_t alive;                  // 1 if alive, 0 if destroyed
-    uint32_t chase_start_time;      // Time when chase behavior started
-    uint8_t chase_direction_index;  // Current direction in chase cycle (0-3)
 } Enemy_t;
+
+/* Enemy spawn position structure */
+typedef struct {
+    uint16_t x;
+    uint16_t y;
+    uint8_t behavior;
+} SpawnPosition_t;
+
+/* Enemy spawn positions */
+extern const SpawnPosition_t enemy_spawn_positions[MAX_ENEMIES];
 
 /**
  * @brief Initialize an enemy tank

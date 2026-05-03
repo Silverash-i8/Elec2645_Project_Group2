@@ -20,6 +20,7 @@ typedef enum{
     TILE_STEEL,
     TILE_BASE
 } TileType;
+
 /**
  * @brief Initialize the map for easy difficulty
  */
@@ -34,13 +35,14 @@ void Map_Init_Medium();
 void Map_Init_Hard();
 /**
  * @brief Draw the map with the specified base health
- * @param base_health Current health of the base
+ * @param base_health; Current health of the base
  */
 void Map_Draw(uint8_t base_health);
 /**
  * @brief Check if a tile is solid (impassable)
  * @param row Row of the tile
  * @param col Column of the tile
+ * @brief Used in Tank_Update in Tank.c to check for collisions with walls
  * @return 1 if solid, 0 otherwise
  */
 uint8_t Map_IsSolid(uint8_t row, uint8_t col);
@@ -48,6 +50,7 @@ uint8_t Map_IsSolid(uint8_t row, uint8_t col);
  * @brief Destroy a tile at the specified location
  * @param row Row of the tile to destroy
  * @param col Column of the tile to destroy
+ * @brief Used in Bullet_Update in Bullet.c when a bullet hits a brick or the base
  */
 void Map_DestroyTile(uint8_t row, uint8_t col);
 #endif

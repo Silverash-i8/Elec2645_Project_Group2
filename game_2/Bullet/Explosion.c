@@ -24,14 +24,14 @@ void Explosions_Draw() {
     for (int i = 0; i < MAX_EXPLOSIONS; i++) {
         if (!explosions[i].active) continue;
 
-        uint8_t f = explosions[i].current_frame;
+        uint8_t frame_number = explosions[i].current_frame;
         uint8_t w, h;
 
-        if (f == 0) { w = 10; h = 10; }   // First frame is smaller
-        else if (f == 1) { w = 13; h = 13; }  // Second frame is medium
-        else { w = 16; h = 16; }  // Third frame is largest
+        if (frame_number == 0) { w = EXPLOSION_FRAME1_WIDTH; h = EXPLOSION_FRAME1_HEIGHT; }   // First frame is smaller
+        else if (frame_number == 1) { w = EXPLOSION_FRAME2_WIDTH; h = EXPLOSION_FRAME2_HEIGHT; }  // Second frame is medium
+        else { w = EXPLOSION_FRAME3_WIDTH; h = EXPLOSION_FRAME3_HEIGHT; }  // Third frame is largest
 
-        LCD_Draw_Sprite(explosions[i].x - (w/2), explosions[i].y - (h/2), w, h, explosion_frame[f]);
+        LCD_Draw_Sprite(explosions[i].x - (w/2), explosions[i].y - (h/2), w, h, explosion_frame[frame_number]);
     }
 }
 

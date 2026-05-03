@@ -6,10 +6,10 @@
 #include "TankEngine.h"
 #include "Buzzer.h"
 #include "LCD.h"
-#include "../Map/Map.h"
 #include <stdio.h>
 #include "Explosion.h"
 #include "stm32l4xx_hal.h"
+#include "../Enemy/Enemy.h"
 
 #define BUZZER_SHOOT_FREQ_HZ 1200
 #define BUZZER_HIT_FREQ_HZ 800
@@ -32,17 +32,6 @@ static void TankEngine_UpdateBuzzer(void) {
     }
 }
 
-/**
- * @brief Checks for collision between a circle and an axis-aligned rectangle.
- * * @param circleX   Center X of the circle
- * @param circleY   Center Y of the circle
- * @param radius    Radius of the circle
- * @param rectX     Center X of the rectangle
- * @param rectY     Center Y of the rectangle
- * @param rectW     Total width of the rectangle
- * @param rectH     Total height of the rectangle
- * @return uint8_t  1 if colliding, 0 if not
- */
 uint8_t CheckCircleRectCollision(int16_t circleX, int16_t circleY, uint16_t radius,
                                  int16_t rectX,   int16_t rectY,   uint16_t rectW, uint16_t rectH) {
     
@@ -81,10 +70,8 @@ uint8_t CheckCircleRectCollision(int16_t circleX, int16_t circleY, uint16_t radi
     return (dx * dx + dy * dy) < (int32_t)(radius * radius);
 }
 
-/**
- * @brief Check if bullet hits a tank
- */
-static uint8_t BulletHitsTank(Bullet_t* bullet, Tank_t* tank) {
+
+uint8_t BulletHitsTank(Bullet_t* bullet, Tank_t* tank) {
     if (!bullet->active || !tank->alive) {
         return 0;
     }
@@ -94,10 +81,8 @@ static uint8_t BulletHitsTank(Bullet_t* bullet, Tank_t* tank) {
     );
 }
 
-/**
- * @brief Find first available bullet slot
- */
-static int16_t FindAvailableBulletSlot(TankEngine_t* engine) {
+
+int16_t FindAvailableBulletSlot(TankEngine_t* engine) {
     for (int16_t i = 0; i < MAX_BULLETS; i++) {
         if (!engine->bullets[i].active) {
             return i;
@@ -106,9 +91,6 @@ static int16_t FindAvailableBulletSlot(TankEngine_t* engine) {
     return -1; // No available slot
 }
 
-// ==========================================
-// PUBLIC API
-// ==========================================
 
 void TankEngine_Init(TankEngine_t* engine, uint16_t start_x, uint16_t start_y, int16_t speed, uint8_t direction) {
 
@@ -120,33 +102,12 @@ void TankEngine_Init(TankEngine_t* engine, uint16_t start_x, uint16_t start_y, i
         Bullet_Init(&engine->bullets[i]);
     }
     
-    // Define spawn positions for enemies (supports up to MAX_ENEMIES)
-    // Spawned in safe corners away from bricks
-    const struct {
-        uint16_t x;
-        uint16_t y;
-        uint8_t behavior;
-    } spawn_positions[MAX_ENEMIES] = {
-        // Top-left corner
-        {60, MAP_OFFSET_Y + 40, 0},
-        // Top-right corner
-        {MAP_WIDTH * TILE_SIZE - 60, MAP_OFFSET_Y + 40, 1},
-        // Bottom-left corner
-        {70, MAP_OFFSET_Y + MAP_HEIGHT * TILE_SIZE - 60, 0},
-        // Bottom-right corner
-        {MAP_WIDTH * TILE_SIZE - 30, MAP_OFFSET_Y + MAP_HEIGHT * TILE_SIZE - 30, 1},
-        // Middle-top (for medium/hard modes)
-        {MAP_WIDTH * TILE_SIZE / 2 + 40, MAP_OFFSET_Y + 60, 0},
-        // Middle-bottom (for hard mode only)
-        {MAP_WIDTH * TILE_SIZE / 2, MAP_OFFSET_Y + MAP_HEIGHT * TILE_SIZE - 70, 1}
-    };
-    
     // Initialize only the required number of enemies
     for (uint8_t i = 0; i < engine->num_enemies; i++) {
         Enemy_Init(&engine->enemies[i], 
-                   spawn_positions[i].x, 
-                   spawn_positions[i].y, 
-                   spawn_positions[i].behavior);
+                   enemy_spawn_positions[i].x, 
+                   enemy_spawn_positions[i].y, 
+                   enemy_spawn_positions[i].behavior);
     }
 
     engine->lives = 3;
@@ -306,7 +267,6 @@ void TankEngine_Update(TankEngine_t* engine, UserInput input) {
                 // Trigger 2-second freeze so player can see base explosion
                 engine->freeze_until_tick = HAL_GetTick() + 2000;
                 engine->freeze_reason = 2;  // Freeze reason: base destroyed (no respawn)
-                // DO NOT set game_over = 1 here! It will be set after freeze expires
             }
         }
     }

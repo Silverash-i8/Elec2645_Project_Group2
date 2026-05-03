@@ -59,9 +59,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     
     # Game implementations (placeholder - students implement these)
     ${CMAKE_SOURCE_DIR}/game_1/Game_1.c
-    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Pieces.c
-    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Logic.c
-    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Render.c
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Pieces/Tetris_Pieces.c
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Logic/Tetris_Logic.c
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Render/Tetris_Render.c
     ${CMAKE_SOURCE_DIR}/game_2/Game_2.c
     ${CMAKE_SOURCE_DIR}/game_3/Game_3.c
 
@@ -104,6 +104,9 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     
     # Game implementations
     ${CMAKE_SOURCE_DIR}/game_1
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Logic
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Pieces
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Render
     ${CMAKE_SOURCE_DIR}/game_2
     ${CMAKE_SOURCE_DIR}/game_3
 

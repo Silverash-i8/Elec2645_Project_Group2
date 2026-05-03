@@ -63,7 +63,7 @@ void Spawning_AutoShootNearestEnemy(uint32_t current_time) {
         return;
     }
 
-    if ((current_time - player.last_shot) <= 500) {
+    if ((current_time - player.last_shot) <= (uint32_t)player.fire_rate) {
         return;
     }
 

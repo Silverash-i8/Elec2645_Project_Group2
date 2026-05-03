@@ -1,7 +1,8 @@
 #include "PowerUp.h"
 #include "PLAYER/Player.h"
 #include "COLLISION/Collision.h"
-#include <stdlib.h> // For rand()
+#include "stm32l4xx_hal.h"
+#include <stdlib.h>
 
 static PowerUp powerup_pool[MAX_POWERUPS];
 
@@ -38,10 +39,12 @@ void PowerUp_Update(void) {
                         if (player.health > PLAYER_MAX_HEALTH) player.health = PLAYER_MAX_HEALTH;
                         break;
                     case POWERUP_SPEED:
-                        // You'll need a speed variable in your Player struct for this!
+                        player.speed = 9.0f;                         // ~1.8x movement boost
+                        player.speed_timer = HAL_GetTick() + 5000;   // lasts 5 seconds
                         break;
                     case POWERUP_RAPID_FIRE:
-                        // You'll need a fire-rate variable in your Player struct for this!
+                        player.fire_rate = 150.0f;                         // 3x faster firing
+                        player.rapid_fire_timer = HAL_GetTick() + 5000;    // lasts 5 seconds
                         break;
                 }
                 

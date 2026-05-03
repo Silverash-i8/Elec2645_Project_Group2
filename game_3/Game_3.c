@@ -1,6 +1,7 @@
 #include "Game_3.h"
 #include "InputHandler.h"
 #include "Menu.h"
+#include <math.h>
 #include "Joystick.h"
 #include "PLAYER/Player.h"
 #include "CAMERA/Camera.h"
@@ -65,6 +66,24 @@ void update_game_logic(uint32_t current_time) {
     // Move player
     Player_Move(joy_data.coord_mapped.x, -joy_data.coord_mapped.y); // Invert Y so down moves down on screen
 
+    // Push player out of obstacles
+    Obstacle* obs = Map3_GetObstacles();
+    for (int k = 0; k < MAX_OBSTACLES; k++) {
+        if (obs[k].active) {
+            float odx = player.x - obs[k].x;
+            float ody = player.y - obs[k].y;
+            float odist = sqrtf(odx*odx + ody*ody);
+            // Player sprite is rendered at PLAYER_SIZE*3 pixels wide, so visual radius = PLAYER_SIZE*3/2
+            // Obstacle is drawn as a square of side obs.size, so visual radius = obs.size/2
+            float min_dist = (float)(PLAYER_SIZE * 3) / 2.0f + (float)obs[k].size / 2.0f;
+            if (odist < min_dist && odist > 0.01f) {
+                float push = min_dist - odist;
+                player.x += (odx / odist) * push;
+                player.y += (ody / odist) * push;
+            }
+        }
+    }
+
     // Update camera to follow player
     Camera_Init(player.x, player.y);
 
@@ -86,10 +105,31 @@ void update_game_logic(uint32_t current_time) {
                 if (enemies[j].active) {
                     if (Collision_CheckCircle(bullets[i].x, bullets[i].y, 2,
                                               enemies[j].x, enemies[j].y, enemies[j].size)) {
+                        float dead_x = enemies[j].x;
+                        float dead_y = enemies[j].y;
                         Enemy3_TakeDamage(j, bullets[i].damage);
                         bullets[i].active = false;
                         Player_AddScore(10);
                         Game3_PlayHitSound(current_time);
+                        // 30% chance to drop a power-up when enemy is killed
+                        if (!enemies[j].active && (rand() % 10) < 3) {
+                            PowerUp_Spawn(dead_x, dead_y);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Check bullet-obstacle collisions
+    for (int i = 0; i < MAX_BULLETS; i++) {
+        if (bullets[i].active) {
+            for (int k = 0; k < MAX_OBSTACLES; k++) {
+                if (obs[k].active) {
+                    if (Collision_CheckCircle(bullets[i].x, bullets[i].y, 2,
+                                              obs[k].x, obs[k].y, obs[k].size)) {
+                        bullets[i].active = false;
                         break;
                     }
                 }
@@ -111,6 +151,10 @@ void update_game_logic(uint32_t current_time) {
 
     // Update game state (wave management)
     GameState_Update(current_time);
+    // Update power-ups (pickup collision)
+    PowerUp_Update();
+    // Expire timed power-up boosts
+    Player_UpdateTimers(current_time);
     Game3_UpdateBuzzer(current_time);
 }
 
@@ -121,6 +165,7 @@ void render_game() {
     Render_Player();
     Render_Bullets();
     Render_Enemies();
+    Render_PowerUps();
     Render_UI();
     Render_Present();
 }

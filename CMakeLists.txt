@@ -28,6 +28,19 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 # Enable CMake support for ASM and C languages
 enable_language(C ASM)
 
+# If CMAKE_OBJCOPY is just a bare name (not in PATH), resolve it from the
+# same bin directory as the detected C compiler.
+if(CMAKE_C_COMPILER AND NOT IS_ABSOLUTE "${CMAKE_OBJCOPY}")
+    get_filename_component(_GCC_BIN_DIR "${CMAKE_C_COMPILER}" DIRECTORY)
+    find_program(_OBJCOPY_PATH
+        NAMES arm-none-eabi-objcopy
+        HINTS "${_GCC_BIN_DIR}"
+        NO_DEFAULT_PATH
+    )
+    if(_OBJCOPY_PATH)
+        set(CMAKE_OBJCOPY "${_OBJCOPY_PATH}")
+    endif()
+endif()
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME}
     game_3/POWERUp/PowerUp.h

@@ -5,6 +5,7 @@
 #include "../ENEMY/Enemy.h"
 #include "../PLAYER/Player.h"
 #include "../CAMERA/Camera.h"
+#include "../POWERUp/PowerUp.h"
 #include "../Sprites/Players/player_up.h"
 #include "../Sprites/Players/player_down.h"
 #include "../Sprites/Players/player_left.h"
@@ -12,7 +13,17 @@
 #include "../Sprites/Enemies/Shamblers/shambler_left.h"
 #include "../Sprites/Enemies/Shamblers/shambler_right.h"
 #include "../Sprites/Enemies/Shamblers/shambler_default.h"
- #include <stdio.h>
+#include "../Sprites/Enemies/Vectors/vector_left.h"
+#include "../Sprites/Enemies/Vectors/vector_right.h"
+#include "../Sprites/Enemies/Tanks/tank_left.h"
+#include "../Sprites/Enemies/Tanks/tank_right.h"
+#include "../Sprites/Enemies/PatientZero/patient_zero_left.h"
+#include "../Sprites/Enemies/PatientZero/patient_zero_right.h"
+#include "../Sprites/PowerUps/powerup_health.h"
+#include "../Sprites/PowerUps/powerup_speed.h"
+#include "../Sprites/PowerUps/powerup_rapid_fire.h"
+#include "../Sprites/Obstacles/obstacle.h"
+#include <stdio.h>
 
 extern ST7789V2_cfg_t cfg0;
 
@@ -35,16 +46,13 @@ void Render_Obstacles(void) {
             int screen_x, screen_y;
             Camera_WorldToScreen(obstacles[i].x, obstacles[i].y, &screen_x, &screen_y);
 
-            // Only draw if the obstacle is currently on the screen
             if (Camera_IsOnScreen(obstacles[i].x, obstacles[i].y, obstacles[i].size)) {
-                // Draw a solid gray/brown rectangle (adjust color index '8' to fit your palette)
-                LCD_Draw_Rect(
-                    screen_x - (obstacles[i].size/2), 
-                    screen_y - (obstacles[i].size/2), 
-                    obstacles[i].size, 
-                    obstacles[i].size, 
-                    3, // Outline color
-                    1  // Fill flag (1 = filled)
+                LCD_Draw_Sprite_Scaled(
+                    screen_x - (obstacles[i].size / 2),
+                    screen_y - (obstacles[i].size / 2),
+                    30, 30,
+                    (const uint8_t *)obstacle_data,
+                    obstacles[i].size / 30 > 0 ? obstacles[i].size / 30 : 1
                 );
             }
         }
@@ -135,29 +143,54 @@ void Render_Enemies(void) {
                         1
                     );
                 }
-                // --- EVERYONE ELSE GETS CIRCLES ---
-                else {
-                    uint16_t color = 1; // Default color
-                    
-                    // Assign temporary colors so you can tell them apart!
-                    if (enemies[i].type == VECTOR) color = 2;       // Color 2 (e.g., Green)
-                    else if (enemies[i].type == TANK) color = 3;    // Color 3 (e.g., Red)
-                    else if (enemies[i].type == PATIENT_ZERO) color = 4; // Color 4 (e.g., Purple)
-
-                    // Draw the circle using the specific size from Enemy.c!
-                    LCD_Draw_Circle(
-                        screen_x, 
-                        screen_y, 
-                        enemies[i].size, // The radius you set for them
-                        color,           // The color we just picked
-                        1                // 1 = Filled circle
-                    );
+                // --- VECTOR ---
+                else if (enemies[i].type == VECTOR) {
+                    const uint8_t *current_sprite = (enemies[i].x > player.x)
+                        ? (const uint8_t *)vector_left_data
+                        : (const uint8_t *)vector_right_data;
+                    LCD_Draw_Sprite_Scaled(screen_x, screen_y, 16, 16, current_sprite, 2);
+                }
+                // --- TANK ---
+                else if (enemies[i].type == TANK) {
+                    const uint8_t *current_sprite = (enemies[i].x > player.x)
+                        ? (const uint8_t *)tank_left_data
+                        : (const uint8_t *)tank_right_data;
+                    LCD_Draw_Sprite_Scaled(screen_x, screen_y, 20, 20, current_sprite, 2);
+                }
+                // --- PATIENT ZERO ---
+                else if (enemies[i].type == PATIENT_ZERO) {
+                    const uint8_t *current_sprite = (enemies[i].x > player.x)
+                        ? (const uint8_t *)patient_zero_left_data
+                        : (const uint8_t *)patient_zero_right_data;
+                    LCD_Draw_Sprite_Scaled(screen_x, screen_y, 48, 48, current_sprite, 1);
                 }
             }
         }
     }
 }
 
+
+void Render_PowerUps(void) {
+    PowerUp* powerups = PowerUp_GetPool();
+    for (int i = 0; i < MAX_POWERUPS; i++) {
+        if (powerups[i].active) {
+            int screen_x, screen_y;
+            Camera_WorldToScreen(powerups[i].x, powerups[i].y, &screen_x, &screen_y);
+            if (Camera_IsOnScreen(powerups[i].x, powerups[i].y, (int)powerups[i].size)) {
+                const uint8_t *sprite = NULL;
+                switch (powerups[i].type) {
+                    case POWERUP_HEALTH:     sprite = (const uint8_t *)powerup_health_data;     break;
+                    case POWERUP_SPEED:      sprite = (const uint8_t *)powerup_speed_data;      break;
+                    case POWERUP_RAPID_FIRE: sprite = (const uint8_t *)powerup_rapid_fire_data; break;
+                    default: break;
+                }
+                if (sprite != NULL) {
+                    LCD_Draw_Sprite_Scaled(screen_x - 8, screen_y - 8, 16, 16, sprite, 1);
+                }
+            }
+        }
+    }
+}
 
 void Render_UI(void) {
     char buffer[32];

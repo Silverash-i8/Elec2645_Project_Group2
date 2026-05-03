@@ -21,6 +21,10 @@ void Player_Init(void) {
     player.enemy_spawn_timer = HAL_GetTick();
     player.last_dash = 0;
     player.direction = 0; // Start facing up
+    player.speed = 5.0f;
+    player.fire_rate = 500.0f;
+    player.speed_timer = 0;
+    player.rapid_fire_timer = 0;
 }
 
 void Player_Move(float joy_x, float joy_y) {
@@ -44,8 +48,8 @@ void Player_Move(float joy_x, float joy_y) {
         
    } else {
         // 3. NORMAL WALKING 
-        player.x += joy_x * 5.0f; 
-        player.y += joy_y * 5.0f; 
+        player.x += joy_x * player.speed; 
+        player.y += joy_y * player.speed; 
 
         // --- NEW: SPRITE DIRECTION LOGIC ---
         // Only change direction if the joystick is actually moving (deadzone check)
@@ -84,7 +88,14 @@ bool Player_IsAlive(void) {
 }
 
 void Player_UpdateTimers(uint32_t current_time) {
-    (void)current_time;
+    if (player.speed_timer > 0 && current_time >= player.speed_timer) {
+        player.speed = 5.0f;
+        player.speed_timer = 0;
+    }
+    if (player.rapid_fire_timer > 0 && current_time >= player.rapid_fire_timer) {
+        player.fire_rate = 500.0f;
+        player.rapid_fire_timer = 0;
+    }
 }
 
 void Player_StartDash(float joy_x, float joy_y) {

@@ -27,7 +27,11 @@ typedef struct {
     uint32_t dash_duration_timer; 
     float dash_vx; // Dash velocity X
     float dash_vy; // Dash velocity Y
-    int direction;     
+    int direction;
+    float speed;                 // Movement speed (boosted by POWERUP_SPEED)
+    float fire_rate;             // Firing interval in ms (reduced by POWERUP_RAPID_FIRE)
+    uint32_t speed_timer;        // Tick when speed boost expires (0 = inactive)
+    uint32_t rapid_fire_timer;   // Tick when rapid-fire boost expires (0 = inactive)
 } Player;
 
 // Global player instance

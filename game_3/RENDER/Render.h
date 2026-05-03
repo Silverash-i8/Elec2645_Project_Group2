@@ -10,6 +10,7 @@ void Render_Map(float camera_x, float camera_y);
 void Render_Player(void);
 void Render_Bullets(void);
 void Render_Enemies(void);
+void Render_PowerUps(void);
 void Render_UI(void);
 void Render_Present(void);
 void Render_Obstacles(void);

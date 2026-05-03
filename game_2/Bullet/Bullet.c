@@ -5,7 +5,7 @@
 
 #include "Bullet.h"
 #include "LCD.h"
-#include "Map.h"
+#include "../Map/Map.h"
 
 void Bullet_Init(Bullet_t* bullet) {
     bullet->x = 0;

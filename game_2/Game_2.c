@@ -2,7 +2,7 @@
 #include "Menus/Tank_1990_Menu.h"
 #include "Menus/Pause_Menu.h"
 #include "TankEngine/TankEngine.h"
-#include "Map/Map.h"
+#include "../Map/Map.h"
 #include "Bullet/Explosion.h"
 #include "InputHandler.h"
 #include "Menu.h"
@@ -138,7 +138,7 @@ void ShowMissionAccomplishedPage(void) {
     LCD_printString(enemies_text, 30, 140, 1, 1);
     
     char base_text[32];
-    sprintf(base_text, "Base Survived      : %d", TankEngine_GetBaseHealth(&game_engine));
+    sprintf(base_text, "Base Health       : %d", TankEngine_GetBaseHealth(&game_engine));
     LCD_printString(base_text, 30, 155, 1, 1);
     
     char lives_text[32];

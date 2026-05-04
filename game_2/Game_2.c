@@ -261,6 +261,9 @@ MenuState Game2_Run(void) {
     HAL_TIM_Base_Init(&htim6);
     HAL_TIM_Base_Start_IT(&htim6);  // Start with interrupts enabled
 
+    // Turn red LED (LD2, PA5) ON at game start - base is at full health
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+
     MenuState exit_state = MENU_STATE_HOME;
 
     // Main game loop - waits for frame timer interrupt
@@ -330,7 +333,26 @@ MenuState Game2_Run(void) {
         }
 
         LCD_Refresh(&cfg0);
-        
+
+        // Red LED (LD2, PA5) shows base health status
+        {
+            uint8_t bh = TankEngine_GetBaseHealth(&game_engine);
+            if (bh == 0) {
+                // Base destroyed - LED off
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+            } else if (bh == 1) {
+                // Base damaged - flicker at ~4 Hz (toggle every 125 ms)
+                if ((HAL_GetTick() / 125) % 2 == 0) {
+                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+                } else {
+                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+                }
+            } else {
+                // Full base health - LED solid on
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+            }
+        }
+
         // Check if user pressed Joystick button to pause game
         if (current_input.btn3_pressed) {
             // Initialize and show pause menu
@@ -357,6 +379,9 @@ MenuState Game2_Run(void) {
     
     // Stop the frame timer when exiting game
     HAL_TIM_Base_Stop_IT(&htim6);
-    
+
+    // Turn red LED off when leaving the game
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+
     return exit_state;  // Tell main where to go next
 }

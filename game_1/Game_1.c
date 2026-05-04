@@ -319,8 +319,6 @@ MenuState Game1_Run(void) {
     for (int i = 0; i < NEXT_BLOCK_COUNT - 1; i++) next_blocks[i] = next_blocks[i + 1];
     next_blocks[NEXT_BLOCK_COUNT - 1] = make_block_public(random_block());
 
-    trail_reset();
-
     /* Play startup sound */
     buzzer_tone(&buzzer_cfg, 1000, 30);
     HAL_Delay(50);
@@ -449,7 +447,6 @@ MenuState Game1_Run(void) {
             current_block.col = (TETRIS_COLS - 4) / 2;
             for (int i = 0; i < NEXT_BLOCK_COUNT - 1; i++) next_blocks[i] = next_blocks[i + 1];
             next_blocks[NEXT_BLOCK_COUNT - 1] = make_block_public(random_block());
-            trail_reset();
             block_landed = 0;
 
             /* Game over check */

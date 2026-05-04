@@ -17,9 +17,6 @@ void draw_next_block(void);
 /* Draw the full playing field (background cells + border + grid lines) */
 void draw_tetris_grid(void);
 
-/* Trail state: reset the trail on new block spawn. */
-void trail_reset(void);
-
 /* Floating score popup: initialise with score delta when lines are cleared */
 void score_popup_init(int delta);
 

@@ -24,7 +24,4 @@
 /* Frame rate (~60 FPS) */
 #define GAME1_FRAME_TIME_MS 16
 
-/* Trail effect: how many past positions to remember */
-#define TRAIL_LEN 4
-
 #endif /* TETRIS_CONFIG_H */

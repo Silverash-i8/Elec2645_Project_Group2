@@ -10,24 +10,6 @@
 extern ST7789V2_cfg_t cfg0;
 
 /* =========================================================
- *  Trail effect
- * ========================================================= */
-
-typedef struct {
-    int row, col, type, rotation;
-    int valid;
-} TrailEntry;
-
-static TrailEntry trail[TRAIL_LEN];
-static int        trail_head = 0;
-
-
-void trail_reset(void) {
-    for (int i = 0; i < TRAIL_LEN; i++) trail[i].valid = 0;
-    trail_head = 0;
-}
-
-/* =========================================================
  *  Score popup
  * ========================================================= */
 

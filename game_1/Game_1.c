@@ -23,26 +23,225 @@ extern Joystick_t     joystick_data;
 
 static uint32_t last_left = 0, last_right = 0, last_up = 0;
 
+/* =========================================================
+ *  RGB helper – cycles through palette indices over time
+ * ========================================================= */
+static const uint8_t rgb_cycle[] = {2, 5, 6, 3, 14, 15, 7}; /* R O Y G C M P */
+#define RGB_CYCLE_LEN 7
+
+static uint8_t rgb_color(uint32_t tick) {
+    return rgb_cycle[(tick / 120) % RGB_CYCLE_LEN];
+}
+
+/* =========================================================
+ *  Start screen
+ * ========================================================= */
+static void show_start_screen(void) {
+    /* Wait for any held button to be released first */
+    do { Input_Read(); HAL_Delay(10); } while (current_input.btn3_pressed);
+
+    int running = 1;
+    while (running) {
+        Input_Read();
+        if (current_input.btn3_pressed) running = 0;
+
+        uint32_t t = HAL_GetTick();
+        uint8_t  rc = rgb_color(t);
+
+        LCD_Fill_Buffer(0);
+
+        /* Top RGB banner */
+        LCD_Draw_Rect(0, 0, 240, 8, rc, 1);
+        LCD_Draw_Rect(0, 232, 240, 8, rc, 1);
+
+        /* Tetris block art: colourful stack of mini-blocks as decoration */
+        for (int col = 0; col < 10; col++) {
+            uint8_t c = block_colors[(col % 7) + 1];
+            LCD_Draw_Rect(20 + col * 20, 18, 16, 8, c, 1);
+        }
+
+        /* Title: size 4 → 6 chars × 6px × 4 = 144px → x = (240-144)/2 = 48 */
+        LCD_printString("TETRIS", 48, 36, rc, 4);
+
+        /* Subtitle decorative line */
+        LCD_Draw_Rect(30, 76, 180, 3, rc, 1);
+
+        /* Flavour text */
+        LCD_printString("Stack.  Clear.  Survive.", 18, 90, 1, 1);
+
+        /* Controls box */
+        LCD_Draw_Rect(25, 110, 190, 68, rc, 0);
+        LCD_Draw_Rect(27, 112, 186, 64, 13, 0);
+        LCD_printString("CONTROLS", 79, 118, rc, 1);
+        LCD_printString("Joystick  LEFT / RIGHT", 33, 132, 1, 1);
+        LCD_printString("Joystick  UP  = rotate", 33, 144, 1, 1);
+        LCD_printString("Joystick  DOWN = soft drop", 33, 156, 1, 1);
+        LCD_printString("BTN3  =  hard drop", 33, 168, 1, 1);
+
+        /* Blinking prompt – blink every 500 ms */
+        if ((t / 500) % 2 == 0) {
+            LCD_Draw_Rect(28, 192, 184, 26, rc, 0);
+            LCD_printString("PRESS BTN3 TO START", 35, 199, rc, 1);
+        }
+
+        /* Bottom block row decoration */
+        for (int col = 0; col < 10; col++) {
+            uint8_t c = block_colors[((col + 3) % 7) + 1];
+            LCD_Draw_Rect(20 + col * 20, 222, 16, 8, c, 1);
+        }
+
+        LCD_Refresh(&cfg0);
+        HAL_Delay(GAME1_FRAME_TIME_MS);
+    }
+    /* Debounce */
+    while (current_input.btn3_pressed) { Input_Read(); HAL_Delay(20); }
+}
+
+/* =========================================================
+ *  Game-over screen
+ * ========================================================= */
+static void show_game_over_screen(int final_score) {
+    /* Clear any held button */
+    do { Input_Read(); HAL_Delay(10); } while (current_input.btn3_pressed);
+
+    /* Play game-over melody while waiting */
+    const Buzzer_Note_t melody[] = { NOTE_C5, NOTE_A4, NOTE_G4, NOTE_E4, NOTE_F4, NOTE_E4 };
+    const uint16_t m_dur[] = { 400, 300, 300, 300, 400, 400 };
+    const int m_len = (int)(sizeof(melody) / sizeof(melody[0]));
+
+    int stop = 0;
+    while (!stop) {
+        for (int idx = 0; idx < m_len; idx++) {
+            buzzer_note(&buzzer_cfg, melody[idx], 45);
+            uint32_t note_start = HAL_GetTick();
+            while (HAL_GetTick() - note_start < m_dur[idx]) {
+                Input_Read();
+                if (current_input.btn3_pressed) { stop = 1; break; }
+
+                /* Render game-over screen while melody plays */
+                uint32_t t = HAL_GetTick();
+                uint8_t  rc = rgb_color(t);
+                LCD_Fill_Buffer(0);
+
+                /* Outer RGB frame */
+                LCD_Draw_Rect(0,   0,   240, 6,   rc, 1);
+                LCD_Draw_Rect(0,   234, 240, 6,   rc, 1);
+                LCD_Draw_Rect(0,   0,   6,   240, rc, 1);
+                LCD_Draw_Rect(234, 0,   6,   240, rc, 1);
+
+                /* Inner dark border */
+                LCD_Draw_Rect(8, 8, 224, 224, 13, 0);
+
+                /* Title banner */
+                LCD_Draw_Rect(12, 12, 216, 48, 0, 1);
+                LCD_printString("GAME OVER", 36, 20, rc, 3);
+
+                /* Divider */
+                LCD_Draw_Rect(12, 60, 216, 3, rc, 1);
+
+                /* Score box */
+                LCD_Draw_Rect(22, 72, 196, 58, 13, 0);
+                char score_buf[24];
+                snprintf(score_buf, sizeof(score_buf), "Score: %d", final_score);
+                int slen = 0; while (score_buf[slen]) slen++;
+                int sx = 22 + (196 - slen * 12) / 2;
+                if (sx < 22) sx = 22;
+                LCD_printString(score_buf, (uint16_t)sx, 82, 6, 2);
+
+                /* Decorative broken-block row */
+                for (int col = 0; col < 8; col++) {
+                    uint8_t bc = block_colors[(col % 7) + 1];
+                    LCD_Draw_Rect(30 + col * 22, 142, 18, 8, bc, 1);
+                }
+
+                /* Message box */
+                LCD_Draw_Rect(22, 158, 196, 44, rc, 0);
+                LCD_Draw_Rect(24, 160, 192, 40, 0, 1);
+                LCD_printString("BLOCKS TOOK OVER!", 36, 166, 1, 1);
+                LCD_printString("PRESS BTN3 TO EXIT", 34, 182, rc, 1);
+
+                /* Corner diamonds using circles */
+                LCD_Draw_Circle(22,  215, 8, rc, 1);
+                LCD_Draw_Circle(22,  215, 3, 0, 1);
+                LCD_Draw_Circle(218, 215, 8, rc, 1);
+                LCD_Draw_Circle(218, 215, 3, 0, 1);
+
+                LCD_Refresh(&cfg0);
+                HAL_Delay(30);
+            }
+            buzzer_off(&buzzer_cfg);
+            if (stop) break;
+        }
+        if (!stop) HAL_Delay(150);
+    }
+
+    /* Show screen once more while waiting for the final exit press */
+    while (current_input.btn3_pressed) { Input_Read(); HAL_Delay(20); }
+    while (1) {
+        Input_Read();
+        if (current_input.btn3_pressed) break;
+
+        uint32_t t = HAL_GetTick();
+        uint8_t  rc = rgb_color(t);
+        LCD_Fill_Buffer(0);
+
+        LCD_Draw_Rect(0,   0,   240, 6,   rc, 1);
+        LCD_Draw_Rect(0,   234, 240, 6,   rc, 1);
+        LCD_Draw_Rect(0,   0,   6,   240, rc, 1);
+        LCD_Draw_Rect(234, 0,   6,   240, rc, 1);
+        LCD_Draw_Rect(8, 8, 224, 224, 13, 0);
+        LCD_Draw_Rect(12, 12, 216, 48, 0, 1);
+        LCD_printString("GAME OVER", 36, 20, rc, 3);
+        LCD_Draw_Rect(12, 60, 216, 3, rc, 1);
+        LCD_Draw_Rect(22, 72, 196, 58, 13, 0);
+        char score_buf[24];
+        snprintf(score_buf, sizeof(score_buf), "Score: %d", final_score);
+        int slen = 0; while (score_buf[slen]) slen++;
+        int sx = 22 + (196 - slen * 12) / 2;
+        if (sx < 22) sx = 22;
+        LCD_printString(score_buf, (uint16_t)sx, 82, 6, 2);
+        for (int col = 0; col < 8; col++) {
+            uint8_t bc = block_colors[(col % 7) + 1];
+            LCD_Draw_Rect(30 + col * 22, 142, 18, 8, bc, 1);
+        }
+        LCD_Draw_Rect(22, 158, 196, 44, rc, 0);
+        LCD_Draw_Rect(24, 160, 192, 40, 0, 1);
+        LCD_printString("BLOCKS TOOK OVER!", 36, 166, 1, 1);
+        LCD_printString("PRESS BTN3 TO EXIT", 34, 182, rc, 1);
+        LCD_Draw_Circle(22,  215, 8, rc, 1);
+        LCD_Draw_Circle(22,  215, 3, 0, 1);
+        LCD_Draw_Circle(218, 215, 8, rc, 1);
+        LCD_Draw_Circle(218, 215, 3, 0, 1);
+        LCD_Refresh(&cfg0);
+        HAL_Delay(30);
+    }
+}
+
+/* =========================================================
+ *  Main game loop
+ * ========================================================= */
 MenuState Game1_Run(void) {
-    // Initialize grid to empty
+    /* Show start screen first */
+    show_start_screen();
+
+    /* Initialize grid to empty */
     for (int r = 0; r < TETRIS_ROWS; r++)
         for (int c = 0; c < TETRIS_COLS; c++)
             tetris_grid[r][c] = 0;
 
-    // Seed RNG and select first/next block
+    /* Seed RNG and initialise block queue */
     srand(HAL_GetTick());
-    // Reset game-specific score tracker
     Score_Reset();
-    current_block.type = random_block();
-    current_block.rotation = 0;
-    current_block.row = 0;
-    current_block.col = (TETRIS_COLS - 4) / 2;
-    next_block.type = random_block();
-    next_block.rotation = 0;
-    next_block.row = 0;
-    next_block.col = (TETRIS_COLS - 4) / 2;
+    init_next_blocks();
+    current_block = make_block_public(next_blocks[0].type);
+    /* Shift queue down */
+    for (int i = 0; i < NEXT_BLOCK_COUNT - 1; i++) next_blocks[i] = next_blocks[i + 1];
+    next_blocks[NEXT_BLOCK_COUNT - 1] = make_block_public(random_block());
+    next_block = next_blocks[0];
 
-    // Play a brief startup sound
+    trail_reset();
+
+    /* Play startup sound */
     buzzer_tone(&buzzer_cfg, 1000, 30);
     HAL_Delay(50);
     buzzer_off(&buzzer_cfg);
@@ -51,24 +250,21 @@ MenuState Game1_Run(void) {
     int game_over = 0;
 
     Joystick_cfg_t* joy_cfg = &joystick_cfg;
-    Joystick_t* joy_data = &joystick_data;
+    Joystick_t*     joy_data = &joystick_data;
     uint32_t last_fall = HAL_GetTick();
-    int soft_drop = 0;
+    int soft_drop   = 0;
     int block_landed = 0;
+
     while (1) {
         uint32_t frame_start = HAL_GetTick();
 
-        // Read input
         Input_Read();
         Joystick_Read(joy_cfg, joy_data);
         UserInput joy = Joystick_GetInput(joy_data);
 
-        // Button handling: joystick push will be used for hard-drop during gameplay,
-        // and for returning to menu only when game is over.
-
-        // --- JOYSTICK CONTROLS ---
         uint32_t now = HAL_GetTick();
-        // Left
+
+        /* Left */
         if ((joy.direction == W || joy.direction == NW || joy.direction == SW) && (now - last_left > JOY_REPEAT_DELAY)) {
             if (can_place(current_block.type, current_block.rotation, current_block.row, current_block.col - 1)) {
                 current_block.col--;
@@ -77,7 +273,7 @@ MenuState Game1_Run(void) {
         } else if (joy.direction != W && joy.direction != NW && joy.direction != SW) {
             last_left = 0;
         }
-        // Right
+        /* Right */
         if ((joy.direction == E || joy.direction == NE || joy.direction == SE) && (now - last_right > JOY_REPEAT_DELAY)) {
             if (can_place(current_block.type, current_block.rotation, current_block.row, current_block.col + 1)) {
                 current_block.col++;
@@ -86,7 +282,7 @@ MenuState Game1_Run(void) {
         } else if (joy.direction != E && joy.direction != NE && joy.direction != SE) {
             last_right = 0;
         }
-        // Rotate
+        /* Rotate */
         if (joy.direction == N && (now - last_up > JOY_REPEAT_DELAY)) {
             int new_rot = (current_block.rotation + 1) % 4;
             if (can_place(current_block.type, new_rot, current_block.row, current_block.col)) {
@@ -96,25 +292,21 @@ MenuState Game1_Run(void) {
         } else if (joy.direction != N) {
             last_up = 0;
         }
-        // Soft drop
-        soft_drop = 0;
-        if (joy.direction == S || joy.direction == SE || joy.direction == SW) {
-            soft_drop = 1;
-        }
+        /* Soft drop */
+        soft_drop = (joy.direction == S || joy.direction == SE || joy.direction == SW) ? 1 : 0;
+
         if (current_input.btn3_pressed) {
             if (!game_over) {
-                // Instant hard drop during gameplay
                 hard_drop();
                 block_landed = 1;
             } else {
-                // When game over, a button press should return to the menu
                 exit_state = MENU_STATE_HOME;
                 break;
             }
         }
 
-        // --- BLOCK FALLING ---
-        uint32_t fall_interval = soft_drop ? 40 : 400; 
+        /* --- BLOCK FALLING --- */
+        uint32_t fall_interval = soft_drop ? 40 : 400;
         if (now - last_fall > fall_interval) {
             if (can_place(current_block.type, current_block.rotation, current_block.row + 1, current_block.col)) {
                 current_block.row++;
@@ -125,115 +317,68 @@ MenuState Game1_Run(void) {
             last_fall = now;
         }
 
-        // --- RENDER ---
+        /* --- RENDER --- */
         LCD_Fill_Buffer(0);
-        // Center the title horizontally
+
+        /* Centred title with RGB colour */
+        /* "TETRIS" = 6 chars × 6px × scale 3 = 108px → x = (240-108)/2 = 66 */
         const char *title = "TETRIS";
-        size_t tlen = 0; while (title[tlen]) tlen++;
-        const uint8_t title_font = 3;
-        int title_x = (ST7789V2_WIDTH - (int)(tlen * 6 * title_font)) / 2;
-        if (title_x < 0) title_x = 0;
-        LCD_printString(title, title_x, 8, 1, title_font);
+        uint8_t title_color = rgb_color(now);
+        LCD_printString(title, 66, 8, title_color, 3);
+
         draw_tetris_grid();
         draw_shadow();
-        draw_block(current_block.type, current_block.rotation, current_block.row, current_block.col, 0);
-        LCD_printString("Next:", NEXT_BLOCK_X, NEXT_BLOCK_Y - 18, 1, 2);
+
+        draw_block(current_block.type, current_block.rotation,
+                   current_block.row, current_block.col, 0);
+
+        /* Next blocks label – centred over the 40px preview column */
+        /* "Next:" = 5 chars × 6px = 30px → offset = (40-30)/2 = 5 */
+        LCD_printString("Next:", NEXT_BLOCK_X + 5, NEXT_BLOCK_Y - 14, 1, 1);
         draw_next_block();
+
         if (!game_over) {
-            // Ensure control text is positioned safely above the bottom of the screen
-            const uint8_t ctl_font = 1;
-            const uint16_t font_h = 7 * ctl_font; // font5x7 is 7 pixels high
-            const uint16_t margin = 6;
-            uint16_t y1 = ST7789V2_HEIGHT - (font_h * 2) - margin; // first line
-            uint16_t y2 = y1 + font_h + 3; // second line with small gap
-            LCD_printString("Push joystick", 40, y1, 1, ctl_font);
-            LCD_printString("to hard drop", 40, y2, 1, ctl_font);
+            /* Control hints – tucked in the left score-panel column */
+            LCD_printString("Btn3=drop", 2, 220, 13, 1);
         }
-        // Draw left-hand score panel
+
         Score_Draw(&cfg0);
+
+        /* Score popup */
+        if (score_popup_active()) {
+            score_popup_update();
+        }
+
         LCD_Refresh(&cfg0);
 
-        // --- BLOCK LANDED: next block ---
+        /* --- BLOCK LANDED: line-clear effects then next block --- */
         if (block_landed) {
-            current_block = next_block;
+            /* If lines were cleared (set by lock_block), do effects */
+            if (last_lines_cleared > 0) {
+                score_popup_init(last_lines_cleared * 100);
+            }
+
+            /* Advance block queue */
+            current_block = next_blocks[0];
             current_block.row = 0;
             current_block.col = (TETRIS_COLS - 4) / 2;
-            next_block.type = random_block();
-            next_block.rotation = 0;
+            for (int i = 0; i < NEXT_BLOCK_COUNT - 1; i++) next_blocks[i] = next_blocks[i + 1];
+            next_blocks[NEXT_BLOCK_COUNT - 1] = make_block_public(random_block());
+            next_block = next_blocks[0];
+            trail_reset();
             block_landed = 0;
-            // Game over check: if new block can't be placed, game over
-            if (!can_place(current_block.type, current_block.rotation, current_block.row, current_block.col)) {
-                // Show Game Over message
+
+            /* Game over check */
+            if (!can_place(current_block.type, current_block.rotation,
+                           current_block.row, current_block.col)) {
                 game_over = 1;
-                LCD_Fill_Buffer(0);
-                // Center GAME OVER
-                const char *go = "GAME OVER";
-                size_t golen = 0; while (go[golen]) golen++;
-                const uint8_t go_font = 3;
-                int go_x = (ST7789V2_WIDTH - (int)(golen * 6 * go_font)) / 2;
-                if (go_x < 0) go_x = 0;
-                LCD_printString(go, go_x, 100, 2, go_font);
-                // Show final score below
-                char final_buf[32];
-                snprintf(final_buf, sizeof(final_buf), "Final score: %d", Score_Get());
-                size_t f_len = 0; while (final_buf[f_len]) f_len++;
-                const uint8_t f_font = 2;
-                int f_x = (ST7789V2_WIDTH - (int)(f_len * 6 * f_font)) / 2;
-                if (f_x < 0) f_x = 0;
-                LCD_printString(final_buf, f_x, 140, 1, f_font);
-                LCD_Refresh(&cfg0);
-                // Clear any existing button press so only a new press will exit
-                Input_Read();
-                while (current_input.btn3_pressed) {
-                    Input_Read();
-                    HAL_Delay(20);
-                }
-
-                // Play game-over music repeatedly until the user presses the joystick button.
-                
-                const Buzzer_Note_t melody[] = { NOTE_C5, NOTE_A4, NOTE_G4, NOTE_E4, NOTE_F4, NOTE_E4 };
-                const uint16_t m_dur[] = { 400, 300, 300, 300, 400, 400 };
-                const int m_len = sizeof(melody) / sizeof(melody[0]);
-                int stop = 0;
-                while (!stop) {
-                    for (int idx = 0; idx < m_len; idx++) {
-                        // start note
-                        buzzer_note(&buzzer_cfg, melody[idx], 45);
-                        uint32_t note_start = HAL_GetTick();
-                        while (HAL_GetTick() - note_start < m_dur[idx]) {
-                            Input_Read();
-                            if (current_input.btn3_pressed) {
-                                stop = 1;
-                                break;
-                            }
-                            HAL_Delay(20);
-                        }
-                        buzzer_off(&buzzer_cfg);
-                        if (stop) break;
-                    }
-                    // brief pause between melody repeats
-                    if (!stop) HAL_Delay(150);
-                }
-
-                // Wait for user to release the button (debounce) then register the press as exit
-                while (current_input.btn3_pressed) {
-                    Input_Read();
-                    HAL_Delay(20);
-                }
-                // Now wait for the next press to exit
-                while (1) {
-                    Input_Read();
-                    if (current_input.btn3_pressed) {
-                        exit_state = MENU_STATE_HOME;
-                        break;
-                    }
-                    HAL_Delay(20);
-                }
+                show_game_over_screen(Score_Get());
+                exit_state = MENU_STATE_HOME;
                 break;
             }
         }
 
-        // Frame timing
+        /* Frame timing */
         uint32_t frame_time = HAL_GetTick() - frame_start;
         if (frame_time < GAME1_FRAME_TIME_MS) {
             HAL_Delay(GAME1_FRAME_TIME_MS - frame_time);
@@ -241,3 +386,4 @@ MenuState Game1_Run(void) {
     }
     return exit_state;
 }
+

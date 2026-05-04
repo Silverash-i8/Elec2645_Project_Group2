@@ -8,7 +8,11 @@
 /* Shared game state – defined in Tetris_Logic.c */
 extern uint8_t    tetris_grid[TETRIS_ROWS][TETRIS_COLS];
 extern BlockState current_block;
-extern BlockState next_block;
+extern BlockState next_block;       /* kept for backward compat – same as next_blocks[0] */
+extern BlockState next_blocks[NEXT_BLOCK_COUNT]; /* preview queue */
+
+/* Number of lines cleared by the most recent lock_block() call (0 if none) */
+extern int        last_lines_cleared;
 
 /* Returns 1 if the piece can be placed at (row, col), 0 otherwise */
 int  can_place(int type, int rotation, int row, int col);
@@ -18,5 +22,11 @@ void lock_block(void);
 
 /* Drops current_block to its lowest valid row then calls lock_block() */
 void hard_drop(void);
+
+/* Initialise the next_blocks preview queue (call once before game loop) */
+void init_next_blocks(void);
+
+/* Create a BlockState for the given type at the spawn position */
+BlockState make_block_public(int type);
 
 #endif /* TETRIS_LOGIC_H */

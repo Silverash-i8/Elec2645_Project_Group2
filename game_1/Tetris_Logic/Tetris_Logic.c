@@ -8,7 +8,30 @@ extern Buzzer_cfg_t buzzer_cfg;
 /* ---- Game state ---- */
 uint8_t    tetris_grid[TETRIS_ROWS][TETRIS_COLS];
 BlockState current_block;
-BlockState next_block;
+BlockState next_block;                       /* alias for next_blocks[0] */
+BlockState next_blocks[NEXT_BLOCK_COUNT];
+int        last_lines_cleared = 0;
+
+/* ---- Helpers ---- */
+static BlockState make_block(int type) {
+    BlockState b;
+    b.type     = type;
+    b.rotation = 0;
+    b.row      = 0;
+    b.col      = (TETRIS_COLS - 4) / 2;
+    return b;
+}
+
+BlockState make_block_public(int type) {
+    return make_block(type);
+}
+
+void init_next_blocks(void) {
+    for (int i = 0; i < NEXT_BLOCK_COUNT; i++) {
+        next_blocks[i] = make_block(random_block());
+    }
+    next_block = next_blocks[0]; /* keep alias in sync */
+}
 
 /* ---- Logic functions ---- */
 
@@ -43,14 +66,14 @@ void lock_block(void) {
     }
 
     /* Clear full lines */
-    int lines_cleared = 0;
+    last_lines_cleared = 0;
     for (int rr = TETRIS_ROWS - 1; rr >= 0; rr--) {
         int full = 1;
         for (int cc = 0; cc < TETRIS_COLS; cc++) {
             if (tetris_grid[rr][cc] == 0) { full = 0; break; }
         }
         if (full) {
-            lines_cleared++;
+            last_lines_cleared++;
             for (int move = rr; move > 0; move--) {
                 for (int cc = 0; cc < TETRIS_COLS; cc++) {
                     tetris_grid[move][cc] = tetris_grid[move - 1][cc];
@@ -62,13 +85,13 @@ void lock_block(void) {
     }
 
     /* Audio + score feedback */
-    if (lines_cleared > 0) {
+    if (last_lines_cleared > 0) {
         buzzer_note(&buzzer_cfg, NOTE_E5, 45);
         HAL_Delay(100);
         buzzer_note(&buzzer_cfg, NOTE_G5, 45);
         HAL_Delay(140);
         buzzer_off(&buzzer_cfg);
-        Score_Add(lines_cleared * 100);
+        Score_Add(last_lines_cleared * 100);
     } else {
         buzzer_tone(&buzzer_cfg, 900, 35);
         HAL_Delay(40);

@@ -25,7 +25,7 @@ void ShowInstructionsPage(void);
  * @brief Display the mission objectives and difficulty board (3 seconds)
  * @param difficulty The selected difficulty level
  */
-void ShowMissionBoardPage(Start2MenuState difficulty);
+void ShowMissionBoardPage(Game2MenuState difficulty);
 
 /**
  * @brief Display the mission accomplished victory page

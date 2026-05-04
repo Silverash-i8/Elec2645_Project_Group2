@@ -5,7 +5,7 @@
 
 #include "Bullet.h"
 #include "LCD.h"
-#include "Map.h"
+#include "../Map/Map.h"
 
 void Bullet_Init(Bullet_t* bullet) {
     bullet->x = 0;
@@ -56,6 +56,6 @@ void Bullet_Draw(Bullet_t* bullet) {
         return;
     }
 
-    // Draw bullet as a small white square
+    // Draw bullet as a small green rectangle
     LCD_Draw_Rect(bullet->x, bullet->y, BULLET_SIZE, BULLET_SIZE, 3, 1);
 }

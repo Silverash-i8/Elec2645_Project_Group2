@@ -3,11 +3,10 @@
 
 #include <stdint.h>
 
-#define BASE_EAGLE_FRAME_COUNT 1
 #define BASE_EAGLE_FRAME_WIDTH 10
 #define BASE_EAGLE_FRAME_HEIGHT 10
 
-/* Piskel data for "Base eagle" */
+/* Sprite data for "Base eagle" */
 const uint8_t base_eagle_data[10][10] = {
 {2, 0, 0, 0, 0, 0, 0, 0, 0, 2},
 {3, 5, 0, 1, 6, 3, 0, 0, 6, 3},
@@ -20,4 +19,4 @@ const uint8_t base_eagle_data[10][10] = {
 {0, 0, 4, 7, 6, 6, 8, 2, 0, 0},
 {0, 0, 1, 1, 1, 1, 2, 1, 0, 0}};
 
-#endif // BASE_EAGLE_H
+#endif

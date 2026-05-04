@@ -42,7 +42,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
             last_btn2_interrupt = current_time;
             
             // Toggle LED to indicate button press
-            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+            // HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
             
             // Set flag indicating button was pressed
             btn2_raw_press = 1;
@@ -56,7 +56,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
             last_btn3_interrupt = current_time;
             
             // Toggle LED to indicate button press
-            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+            // HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
             
             // Set flag indicating button was pressed
             btn3_raw_press = 1;

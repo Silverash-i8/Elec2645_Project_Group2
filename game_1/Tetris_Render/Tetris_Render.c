@@ -21,49 +21,10 @@ typedef struct {
 static TrailEntry trail[TRAIL_LEN];
 static int        trail_head = 0;
 
-/* Palette colours cycled for trail (fading from dim to invisible) */
-/* indices lightest -> darkest dim ghost colours */
-static const uint8_t trail_colors[TRAIL_LEN] = {13, 13, 0, 0};
-/* 13 = grey, 0 = black (invisible) – older entries disappear */
 
 void trail_reset(void) {
     for (int i = 0; i < TRAIL_LEN; i++) trail[i].valid = 0;
     trail_head = 0;
-}
-
-void trail_update(int row, int col, int type, int rotation) {
-    /* Shift in new position */
-    trail[trail_head].row      = row;
-    trail[trail_head].col      = col;
-    trail[trail_head].type     = type;
-    trail[trail_head].rotation = rotation;
-    trail[trail_head].valid    = 1;
-    trail_head = (trail_head + 1) % TRAIL_LEN;
-
-    /* Draw oldest → newest so newer overwrites older */
-    for (int age = TRAIL_LEN - 1; age >= 0; age--) {
-        int idx = (trail_head + age) % TRAIL_LEN;
-        if (!trail[idx].valid) continue;
-        /* Don't draw at same position as current block */
-        if (trail[idx].row == row && trail[idx].col == col) continue;
-        uint8_t col_idx = trail_colors[age]; /* age 0 = oldest */
-        if (col_idx == 0) continue;
-        for (int r = 0; r < 4; r++) {
-            for (int c = 0; c < 4; c++) {
-                uint8_t val = tetriminos[trail[idx].type][trail[idx].rotation][r][c];
-                if (!val) continue;
-                int gr = trail[idx].row + r;
-                int gc = trail[idx].col + c;
-                if (gr < 0 || gr >= TETRIS_ROWS || gc < 0 || gc >= TETRIS_COLS) continue;
-                /* Only draw in empty grid cells so we don't overwrite locked pieces */
-                if (tetris_grid[gr][gc]) continue;
-                uint16_t px = GRID_ORIGIN_X + gc * CELL_SIZE;
-                uint16_t py = GRID_ORIGIN_Y + gr * CELL_SIZE;
-                /* Draw a smaller inner rect to look like a faint trail */
-                LCD_Draw_Rect(px + 2, py + 2, CELL_SIZE - 4, CELL_SIZE - 4, col_idx, 1);
-            }
-        }
-    }
 }
 
 /* =========================================================
@@ -115,31 +76,6 @@ void score_popup_update(void) {
     }
 
     popup_frames--;
-}
-
-/* =========================================================
- *  Line-clear RGB flash
- * ========================================================= */
-
-/* RGB cycling colours for the flash (use bright palette entries) */
-static const uint8_t flash_palette[] = {2, 5, 6, 3, 14, 15, 7};
-#define FLASH_PALETTE_LEN 7
-
-void line_clear_flash(int lines_cleared) {
-    if (lines_cleared <= 0) return;
-
-    for (int frame = 0; frame < LINE_CLEAR_FLASH_FRAMES; frame++) {
-        uint8_t color = flash_palette[frame % FLASH_PALETTE_LEN];
-        /* Flash the entire cleared area (top rows of grid) */
-        for (int row = 0; row < lines_cleared; row++) {
-            uint16_t y = GRID_ORIGIN_Y + row * CELL_SIZE;
-            LCD_Draw_Rect(GRID_ORIGIN_X, y, GRID_WIDTH, CELL_SIZE, color, 1);
-        }
-        /* Also flash the bottom rows (where clearing happens) – 
-           we don't know exact rows post-clear, so flash full width stripes */
-        LCD_Refresh(&cfg0);
-        HAL_Delay(30);
-    }
 }
 
 /* =========================================================

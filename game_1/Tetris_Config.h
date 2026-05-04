@@ -3,7 +3,6 @@
 
 /* Joystick debounce timing (milliseconds) */
 #define JOY_REPEAT_DELAY 150
-#define JOY_FAST_REPEAT   60
 
 /* Grid geometry */
 #define TETRIS_ROWS   16
@@ -27,8 +26,5 @@
 
 /* Trail effect: how many past positions to remember */
 #define TRAIL_LEN 4
-
-/* Line-clear flash: number of flash frames */
-#define LINE_CLEAR_FLASH_FRAMES 6
 
 #endif /* TETRIS_CONFIG_H */

@@ -34,6 +34,89 @@ static uint8_t rgb_color(uint32_t tick) {
 }
 
 /* =========================================================
+ *  Pause menu
+ *  Returns 1 = continue, 0 = return to main menu
+ * ========================================================= */
+static int show_pause_menu(void) {
+    /* Debounce – wait for BTN2 to be released before entering */
+    do { Input_Read(); HAL_Delay(10); } while (current_input.btn2_pressed);
+
+    int selected = 0; /* 0 = Continue, 1 = Main Menu */
+    Direction last_dir = CENTRE;
+    int choice = -1; /* -1 = still deciding */
+
+    while (choice < 0) {
+        Input_Read();
+        Joystick_Read(&joystick_cfg, &joystick_data);
+        UserInput joy = Joystick_GetInput(&joystick_data);
+        Direction dir = joy.direction;
+
+        /* Navigate with joystick up/down */
+        if ((dir == N || dir == NW || dir == NE) && last_dir == CENTRE) {
+            selected = 0;
+        } else if ((dir == S || dir == SW || dir == SE) && last_dir == CENTRE) {
+            selected = 1;
+        }
+        last_dir = (dir == CENTRE) ? CENTRE : dir;
+
+        /* BTN3 confirms selection */
+        if (current_input.btn3_pressed) {
+            choice = selected;
+        }
+
+        uint32_t t = HAL_GetTick();
+        uint8_t  rc = rgb_color(t);
+
+        LCD_Fill_Buffer(0);
+
+        /* Outer RGB border */
+        LCD_Draw_Rect(0,   0,   240, 5,   rc, 1);
+        LCD_Draw_Rect(0,   235, 240, 5,   rc, 1);
+        LCD_Draw_Rect(0,   0,   5,   240, rc, 1);
+        LCD_Draw_Rect(235, 0,   5,   240, rc, 1);
+
+        /* Inner panel */
+        LCD_Draw_Rect(10, 10, 220, 220, 13, 0);
+        LCD_Draw_Rect(12, 12, 216, 80, 0, 1);
+
+        /* Title */
+        /* "PAUSED" = 6 chars x 6px x 3 = 108px -> x = (240-108)/2 = 66 */
+        LCD_printString("PAUSED", 66, 22, rc, 3);
+        LCD_Draw_Rect(12, 62, 216, 3, rc, 1);
+
+        /* Subtitle */
+        LCD_printString("Game is paused", 60, 72, 13, 1);
+
+        /* Option boxes */
+        /* Continue */
+        uint8_t cont_col  = (selected == 0) ? rc : 13;
+        uint8_t menu_col  = (selected == 1) ? rc : 13;
+
+        LCD_Draw_Rect(30, 100, 180, 40, cont_col, 0);
+        if (selected == 0) LCD_Draw_Rect(32, 102, 176, 36, 0, 1);
+        /* "Continue" = 8 chars x 12px = 96px -> x = 30+(180-96)/2 = 72 */
+        LCD_printString("Continue", 72, 112, (selected == 0) ? rc : 1, 2);
+
+        /* Main Menu */
+        LCD_Draw_Rect(30, 155, 180, 40, menu_col, 0);
+        if (selected == 1) LCD_Draw_Rect(32, 157, 176, 36, 0, 1);
+        /* "Main Menu" = 9 chars x 12px = 108px -> x = 30+(180-108)/2 = 66 */
+        LCD_printString("Main Menu", 66, 167, (selected == 1) ? rc : 1, 2);
+
+        /* Nav hint */
+        LCD_printString("Joy up/down  BTN3=select", 20, 210, 13, 1);
+
+        LCD_Refresh(&cfg0);
+        HAL_Delay(GAME1_FRAME_TIME_MS);
+    }
+
+    /* Debounce exit */
+    do { Input_Read(); HAL_Delay(10); } while (current_input.btn3_pressed || current_input.btn2_pressed);
+
+    return (choice == 0) ? 1 : 0; /* 1 = resume, 0 = quit */
+}
+
+/* =========================================================
  *  Start screen
  * ========================================================= */
 static void show_start_screen(void) {
@@ -295,6 +378,18 @@ MenuState Game1_Run(void) {
         /* Soft drop */
         soft_drop = (joy.direction == S || joy.direction == SE || joy.direction == SW) ? 1 : 0;
 
+        /* Pause – BTN2 (PC2) */
+        if (current_input.btn2_pressed && !game_over) {
+            int resume = show_pause_menu();
+            if (!resume) {
+                exit_state = MENU_STATE_HOME;
+                break;
+            }
+            /* Resume: reset fall timer so block doesn't instantly drop */
+            last_fall = HAL_GetTick();
+            last_left = last_right = last_up = 0;
+        }
+
         if (current_input.btn3_pressed) {
             if (!game_over) {
                 hard_drop();
@@ -339,7 +434,8 @@ MenuState Game1_Run(void) {
 
         if (!game_over) {
             /* Control hints – tucked in the left score-panel column */
-            LCD_printString("Btn3=drop", 2, 220, 13, 1);
+            LCD_printString("B3=drop", 2, 213, 13, 1);
+            LCD_printString("B2=pause", 2, 223, 13, 1);
         }
 
         Score_Draw(&cfg0);

@@ -1,6 +1,7 @@
 #include "Game_3.h"
 #include "InputHandler.h"
 #include "Menu.h"
+#include <math.h>
 #include "Joystick.h"
 #include "PLAYER/Player.h"
 #include "CAMERA/Camera.h"
@@ -15,6 +16,8 @@
 #include "PWM.h"
 #include "stm32l4xx_hal.h"
 #include <stdbool.h>
+#include "Game3Menu/Game3_Menu.h"
+#include "POWERUp/PowerUp.h"
 
 extern ST7789V2_cfg_t cfg0;
 extern PWM_cfg_t pwm_cfg;      // LED PWM control
@@ -55,6 +58,7 @@ static void Game3_UpdateBuzzer(uint32_t current_time) {
 }
 
 void update_game_logic(uint32_t current_time) {
+    Enemy* enemies = Enemy3_GetPool();
     // Read joystick
     Joystick_t joy_data;
     Joystick_Read(&joystick_cfg, &joy_data);
@@ -62,8 +66,26 @@ void update_game_logic(uint32_t current_time) {
     // Move player
     Player_Move(joy_data.coord_mapped.x, -joy_data.coord_mapped.y); // Invert Y so down moves down on screen
 
+    // Push player out of obstacles
+    Obstacle* obs = Map3_GetObstacles();
+    for (int k = 0; k < MAX_OBSTACLES; k++) {
+        if (obs[k].active) {
+            float odx = player.x - obs[k].x;
+            float ody = player.y - obs[k].y;
+            float odist = sqrtf(odx*odx + ody*ody);
+            // Player sprite is rendered at PLAYER_SIZE*3 pixels wide, so visual radius = PLAYER_SIZE*3/2
+            // Obstacle is drawn as a square of side obs.size, so visual radius = obs.size/2
+            float min_dist = (float)(PLAYER_SIZE * 3) / 2.0f + (float)obs[k].size / 2.0f;
+            if (odist < min_dist && odist > 0.01f) {
+                float push = min_dist - odist;
+                player.x += (odx / odist) * push;
+                player.y += (ody / odist) * push;
+            }
+        }
+    }
+
     // Update camera to follow player
-    Camera_Update(player.x, player.y);
+    Camera_Init(player.x, player.y);
 
     // Auto-shoot the nearest enemy
     Spawning_AutoShootNearestEnemy(current_time);
@@ -74,19 +96,40 @@ void update_game_logic(uint32_t current_time) {
     // Update enemies
     Enemy3_Update(player.x, player.y);
 
+
     // Check bullet-enemy collisions
     Bullet* bullets = Bullet3_GetPool();
-    Enemy* enemies = Enemy3_GetPool();
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (bullets[i].active) {
             for (int j = 0; j < MAX_ENEMIES; j++) {
                 if (enemies[j].active) {
                     if (Collision_CheckCircle(bullets[i].x, bullets[i].y, 2,
                                               enemies[j].x, enemies[j].y, enemies[j].size)) {
+                        float dead_x = enemies[j].x;
+                        float dead_y = enemies[j].y;
                         Enemy3_TakeDamage(j, bullets[i].damage);
                         bullets[i].active = false;
                         Player_AddScore(10);
                         Game3_PlayHitSound(current_time);
+                        // 30% chance to drop a power-up when enemy is killed
+                        if (!enemies[j].active && (rand() % 10) < 3) {
+                            PowerUp_Spawn(dead_x, dead_y);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Check bullet-obstacle collisions
+    for (int i = 0; i < MAX_BULLETS; i++) {
+        if (bullets[i].active) {
+            for (int k = 0; k < MAX_OBSTACLES; k++) {
+                if (obs[k].active) {
+                    if (Collision_CheckCircle(bullets[i].x, bullets[i].y, 2,
+                                              obs[k].x, obs[k].y, obs[k].size)) {
+                        bullets[i].active = false;
                         break;
                     }
                 }
@@ -108,6 +151,10 @@ void update_game_logic(uint32_t current_time) {
 
     // Update game state (wave management)
     GameState_Update(current_time);
+    // Update power-ups (pickup collision)
+    PowerUp_Update();
+    // Expire timed power-up boosts
+    Player_UpdateTimers(current_time);
     Game3_UpdateBuzzer(current_time);
 }
 
@@ -118,25 +165,28 @@ void render_game() {
     Render_Player();
     Render_Bullets();
     Render_Enemies();
+    Render_PowerUps();
     Render_UI();
     Render_Present();
 }
 
 MenuState Game3_Run(void) {
-    // Initialize game state
+    // 1. Initialize systems quietly
     Player_Init();
     Camera_Init(player.x, player.y);
-    game_timer = HAL_GetTick();
-
-    // Initialize systems
     Bullet3_Init();
     Enemy3_Init();
     Map3_Init();
+    PowerUp_Init();
 
-    // Spawn initial enemies around player
+    // 2. SHOW THE MAIN MENU
+    Game3_ShowMainMenu();
+
+    // 3. START THE ACTUAL GAME (Only do this ONCE)
+    game_timer = HAL_GetTick();
     Spawning_SpawnEnemyWave(0);
 
-    // Play startup sound
+    // Initial start sound
     buzzer_tone(&buzzer_cfg, 1000, 50);
     HAL_Delay(100);
     buzzer_off(&buzzer_cfg);
@@ -150,17 +200,21 @@ MenuState Game3_Run(void) {
         // Read input
         Input_Read();
 
-        // Check exit condition
-        // Check exit condition (Now ONLY triggers on death)
+        // Check death condition
         if (GameState_IsGameOver()) {
-            PWM_SetDuty(&pwm_cfg, 50);
+            // FIX: Turn off buzzer and show the screen before breaking!
+            buzzer_off(&buzzer_cfg);
+            Game3_ShowGameOver(); 
+            
             exit_state = MENU_STATE_HOME;
             break;
         }
 
-        // Check Dash Input
+        // Dash Logic
         if (current_input.btn3_pressed) {
-            Player_Dash();
+            Joystick_t dash_joy;
+            Joystick_Read(&joystick_cfg, &dash_joy);
+            Player_StartDash(dash_joy.coord_mapped.x, -dash_joy.coord_mapped.y);
         }
 
         // Update game logic

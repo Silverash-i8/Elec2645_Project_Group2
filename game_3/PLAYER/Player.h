@@ -23,7 +23,15 @@ typedef struct {
     uint32_t wave_timer;
     uint32_t enemy_spawn_timer;
     uint32_t last_dash;
-    int direction;     
+    bool is_dashing;
+    uint32_t dash_duration_timer; 
+    float dash_vx; // Dash velocity X
+    float dash_vy; // Dash velocity Y
+    int direction;
+    float speed;                 // Movement speed (boosted by POWERUP_SPEED)
+    float fire_rate;             // Firing interval in ms (reduced by POWERUP_RAPID_FIRE)
+    uint32_t speed_timer;        // Tick when speed boost expires (0 = inactive)
+    uint32_t rapid_fire_timer;   // Tick when rapid-fire boost expires (0 = inactive)
 } Player;
 
 // Global player instance
@@ -36,6 +44,5 @@ void Player_TakeDamage(float damage);
 void Player_AddScore(int points);
 bool Player_IsAlive(void);
 void Player_UpdateTimers(uint32_t current_time);
-void Player_Dash(void);
-
+void Player_StartDash(float joy_x, float joy_y);
 #endif // PLAYER_H

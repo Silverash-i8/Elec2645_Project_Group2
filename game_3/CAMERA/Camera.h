@@ -14,7 +14,6 @@ extern float camera_y;
 
 // Camera functions
 void Camera_Init(float player_x, float player_y);
-void Camera_Update(float player_x, float player_y);
 void Camera_WorldToScreen(float world_x, float world_y, int* screen_x, int* screen_y);
 bool Camera_IsOnScreen(float world_x, float world_y, int size);
 

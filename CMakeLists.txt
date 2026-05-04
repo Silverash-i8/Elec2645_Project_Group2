@@ -28,8 +28,23 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 # Enable CMake support for ASM and C languages
 enable_language(C ASM)
 
+# If CMAKE_OBJCOPY is just a bare name (not in PATH), resolve it from the
+# same bin directory as the detected C compiler.
+if(CMAKE_C_COMPILER AND NOT IS_ABSOLUTE "${CMAKE_OBJCOPY}")
+    get_filename_component(_GCC_BIN_DIR "${CMAKE_C_COMPILER}" DIRECTORY)
+    find_program(_OBJCOPY_PATH
+        NAMES arm-none-eabi-objcopy
+        HINTS "${_GCC_BIN_DIR}"
+        NO_DEFAULT_PATH
+    )
+    if(_OBJCOPY_PATH)
+        set(CMAKE_OBJCOPY "${_OBJCOPY_PATH}")
+    endif()
+endif()
 # Create an executable object type
-add_executable(${CMAKE_PROJECT_NAME})
+add_executable(${CMAKE_PROJECT_NAME}
+    game_3/POWERUp/PowerUp.h
+    game_3/POWERUp/PowerUp.c)
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
@@ -57,9 +72,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     
     # Game implementations (placeholder - students implement these)
     ${CMAKE_SOURCE_DIR}/game_1/Game_1.c
-    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Pieces.c
-    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Logic.c
-    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Render.c
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Pieces/Tetris_Pieces.c
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Logic/Tetris_Logic.c
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Render/Tetris_Render.c
     ${CMAKE_SOURCE_DIR}/game_2/Game_2.c
     ${CMAKE_SOURCE_DIR}/game_3/Game_3.c
 
@@ -73,6 +88,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/game_3/GAME_STATE/GameState.c
     ${CMAKE_SOURCE_DIR}/game_3/SPAWNING/Spawning.c
     ${CMAKE_SOURCE_DIR}/game_3/MAP/Map.c
+    ${CMAKE_SOURCE_DIR}/game_3/Game3Menu/Game3_Menu.c
 
     # Game 2 Implementations
     ${CMAKE_SOURCE_DIR}/game_2/Menus/Tank_1990_Menu.c
@@ -101,6 +117,9 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     
     # Game implementations
     ${CMAKE_SOURCE_DIR}/game_1
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Logic
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Pieces
+    ${CMAKE_SOURCE_DIR}/game_1/Tetris_Render
     ${CMAKE_SOURCE_DIR}/game_2
     ${CMAKE_SOURCE_DIR}/game_3
 

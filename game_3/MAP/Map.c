@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdlib.h> // Needed for rand()
 
-// The static memory pool for your obstacles
 static Obstacle obstacle_pool[MAX_OBSTACLES];
 
 void Map3_Init(void) {

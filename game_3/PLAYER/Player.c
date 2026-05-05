@@ -41,7 +41,7 @@ void Player_Move(float joy_x, float joy_y) {
             buzzer_off(&buzzer_cfg);
         }
 
-        // TURN OFF DASH MODE after 150ms! (This is what you were missing)
+        // TURN OFF DASH MODE after 150ms! 
         if (elapsed_time > 150) {
             player.is_dashing = false; 
         }
@@ -50,25 +50,23 @@ void Player_Move(float joy_x, float joy_y) {
         // 3. NORMAL WALKING 
         player.x += joy_x * player.speed; 
         player.y += joy_y * player.speed; 
-
-        // --- NEW: SPRITE DIRECTION LOGIC ---
         // Only change direction if the joystick is actually moving (deadzone check)
         if (fabs(joy_x) > 0.1f || fabs(joy_y) > 0.1f) {
             
             // Check if we are moving horizontally MORE than we are moving vertically
             if (fabs(joy_x) > fabs(joy_y)) {
                 if (joy_x > 0) {
-                    player.direction = 1; // RIGHT (You might need to tweak this number)
+                    player.direction = 1; // RIGHT 
                 } else {
-                    player.direction = 3; // LEFT (You might need to tweak this number)
+                    player.direction = 3; // LEFT 
                 }
             } 
             // Otherwise, we are moving vertically
             else {
                 if (joy_y > 0) {
-                    player.direction = 2; // DOWN (You might need to tweak this number)
+                    player.direction = 2; // DOWN 
                 } else {
-                    player.direction = 0; // UP (We know 0 is UP from your Init function)
+                    player.direction = 0; // UP 
                 }
             }
         }

@@ -1,8 +1,9 @@
 #include "Game3_Menu.h"
-#include "LCD.h"              // Match your friend's include
+#include "LCD.h"              
 #include "InputHandler.h"
 #include "RENDER/Render.h"
 #include "PLAYER/Player.h"    // So we can access player.score
+#include "Joystick.h"
 #include "stm32l4xx_hal.h"
 #include "Buzzer.h"
 #include <stdio.h>            // For sprintf
@@ -59,9 +60,7 @@ void Game3_ShowMainMenu(void) {
         LCD_printString("PRESS BTN3 TO START", 63, 200, 6, 1);
 
         // ── FOOTER ───────────────────────────────────────────────────
-        LCD_Draw_Circle(12, 230, 7, 2, 1);        // Red left dot
         LCD_Draw_Line(24, 230, 216, 230, 13);     // Grey connecting line
-        LCD_Draw_Circle(228, 230, 7, 2, 1);       // Red right dot
 
         LCD_Refresh(&cfg0);
         HAL_Delay(30);
@@ -124,13 +123,90 @@ void Game3_ShowGameOver(void) {
         // "PRESS BTN3 TO EXIT" orange — 18 chars × 6 = 108px, in box: 20+(200-108)/2 = 66
         LCD_printString("PRESS BTN3 TO EXIT", 66, 175, 5, 1);
 
-        // ── SKULL CORNER DECORATIONS ─────────────────────────────────
-        LCD_Draw_Circle(22,  215, 13, 2, 1); // Red outer
-        LCD_Draw_Circle(22,  215,  5, 0, 1); // Black hollow centre (eye socket)
-        LCD_Draw_Circle(218, 215, 13, 2, 1);
-        LCD_Draw_Circle(218, 215,  5, 0, 1);
-
         LCD_Refresh(&cfg0);
         HAL_Delay(30);
     }
+}
+
+bool Game3_ShowPauseMenu(void) {
+    extern Joystick_cfg_t joystick_cfg;
+
+    /* Debounce – wait for BTN2 to be released before entering */
+    do { Input_Read(); HAL_Delay(10); } while (current_input.btn2_pressed);
+
+    int selected = 0; /* 0 = Resume, 1 = Main Menu */
+    Direction last_dir = CENTRE;
+    int choice = -1;
+
+    while (choice < 0) {
+        Input_Read();
+        Joystick_t joy_data;
+        Joystick_Read(&joystick_cfg, &joy_data);
+        Direction dir = joy_data.direction;
+
+        if ((dir == N || dir == NW || dir == NE) && last_dir == CENTRE) {
+            selected = 0;
+        } else if ((dir == S || dir == SW || dir == SE) && last_dir == CENTRE) {
+            selected = 1;
+        }
+        last_dir = (dir == CENTRE) ? CENTRE : dir;
+
+        if (current_input.btn3_pressed) {
+            choice = selected;
+        }
+
+        LCD_Fill_Buffer(0);
+
+        /* ── GREEN EDGE FRAME (matching zombie-survivor palette) ─── */
+        LCD_Draw_Rect(0,   0,   240, 6,   3, 1);
+        LCD_Draw_Rect(0,   234, 240, 6,   3, 1);
+        LCD_Draw_Rect(0,   0,   6,   240, 3, 1);
+        LCD_Draw_Rect(234, 0,   6,   240, 3, 1);
+
+        /* Inner grey border */
+        LCD_Draw_Rect(8, 8, 224, 224, 13, 0);
+
+        /* ── TITLE BANNER ──────────────────────────────────────────── */
+        LCD_Draw_Rect(10, 10, 220, 50, 3, 1);
+        /* "PAUSED" white size 3 – 6×18=108px, x=(240-108)/2=66 */
+        LCD_printString("PAUSED", 66, 22, 1, 3);
+
+        /* Orange divider */
+        LCD_Draw_Rect(10, 60, 220, 4, 5, 1);
+
+        /* ── 3 zombie heads (reuse style from main menu) ─────────── */
+        for (int i = 0; i < 3; i++) {
+            int cx = 60 + i * 60;
+            LCD_Draw_Circle(cx, 85, 11, 3, 1);
+            LCD_Draw_Circle(cx - 4, 81, 2, 1, 1);
+            LCD_Draw_Circle(cx + 4, 81, 2, 1, 1);
+        }
+        LCD_Draw_Line(20, 103, 220, 103, 13);
+
+        /* ── RESUME option ─────────────────────────────────────────── */
+        uint8_t res_border = (selected == 0) ? 3 : 13;
+        LCD_Draw_Rect(25, 115, 190, 42, res_border, 0);
+        if (selected == 0) LCD_Draw_Rect(27, 117, 186, 38, 0, 1);
+        /* "Resume" = 6×12=72px, x=25+(190-72)/2=84 */
+        LCD_printString("Resume", 84, 129, (selected == 0) ? 3 : 1, 2);
+
+        /* ── MAIN MENU option ──────────────────────────────────────── */
+        uint8_t mm_border = (selected == 1) ? 2 : 13;
+        LCD_Draw_Rect(25, 170, 190, 42, mm_border, 0);
+        if (selected == 1) LCD_Draw_Rect(27, 172, 186, 38, 0, 1);
+        /* "Main Menu" = 9×12=108px, x=25+(190-108)/2=66 */
+        LCD_printString("Main Menu", 66, 184, (selected == 1) ? 2 : 1, 2);
+
+        /* ── NAV HINT ──────────────────────────────────────────────── */
+        /* "Joy up/dn  BTN3=select" = 22×6=132px, x=(240-132)/2=54 */
+        LCD_printString("Joy up/dn  BTN3=select", 54, 225, 13, 1);
+
+        LCD_Refresh(&cfg0);
+        HAL_Delay(16);
+    }
+
+    /* Debounce exit */
+    do { Input_Read(); HAL_Delay(10); } while (current_input.btn3_pressed);
+
+    return (choice == 0); /* true = resume */
 }

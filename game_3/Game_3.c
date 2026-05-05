@@ -29,7 +29,8 @@ extern Joystick_cfg_t joystick_cfg;
  *
  * Features:
  * - Player movement with joystick
- * - Shooting with button
+ * - Shooting automatically targets nearest enemy
+ * - Dash mechanic with buzzer feedback
  * - Enemy waves
  * - Collision detection
  * - Health system
@@ -182,7 +183,7 @@ MenuState Game3_Run(void) {
     // 2. SHOW THE MAIN MENU
     Game3_ShowMainMenu();
 
-    // 3. START THE ACTUAL GAME (Only do this ONCE)
+    // 3. START THE ACTUAL GAME 
     game_timer = HAL_GetTick();
     Spawning_SpawnEnemyWave(0);
 
@@ -200,9 +201,20 @@ MenuState Game3_Run(void) {
         // Read input
         Input_Read();
 
+        // Pause – BTN2 (PC2)
+        if (current_input.btn2_pressed) {
+            buzzer_off(&buzzer_cfg);
+            bool resume = Game3_ShowPauseMenu();
+            if (!resume) {
+                exit_state = MENU_STATE_HOME;
+                break;
+            }
+            /* Resume: resync game timer so no burst of logic runs after unpause */
+            game_timer = HAL_GetTick();
+        }
+
         // Check death condition
         if (GameState_IsGameOver()) {
-            // FIX: Turn off buzzer and show the screen before breaking!
             buzzer_off(&buzzer_cfg);
             Game3_ShowGameOver(); 
             

@@ -7,7 +7,6 @@
 #include "InputHandler.h"
 #include "Menu.h"
 #include "LCD.h"
-#include "PWM.h"
 #include "Buzzer.h"
 #include "Score.h"
 #include "ST7789V2_Driver.h"
@@ -16,7 +15,6 @@
 #include <stdlib.h>
 
 extern ST7789V2_cfg_t cfg0;
-extern PWM_cfg_t      pwm_cfg;
 extern Buzzer_cfg_t   buzzer_cfg;
 extern Joystick_cfg_t joystick_cfg;
 extern Joystick_t     joystick_data;
@@ -320,9 +318,6 @@ MenuState Game1_Run(void) {
     /* Shift queue down */
     for (int i = 0; i < NEXT_BLOCK_COUNT - 1; i++) next_blocks[i] = next_blocks[i + 1];
     next_blocks[NEXT_BLOCK_COUNT - 1] = make_block_public(random_block());
-    next_block = next_blocks[0];
-
-    trail_reset();
 
     /* Play startup sound */
     buzzer_tone(&buzzer_cfg, 1000, 30);
@@ -330,7 +325,6 @@ MenuState Game1_Run(void) {
     buzzer_off(&buzzer_cfg);
 
     MenuState exit_state = MENU_STATE_HOME;
-    int game_over = 0;
 
     Joystick_cfg_t* joy_cfg = &joystick_cfg;
     Joystick_t*     joy_data = &joystick_data;
@@ -379,7 +373,7 @@ MenuState Game1_Run(void) {
         soft_drop = (joy.direction == S || joy.direction == SE || joy.direction == SW) ? 1 : 0;
 
         /* Pause – BTN2 (PC2) */
-        if (current_input.btn2_pressed && !game_over) {
+        if (current_input.btn2_pressed) {
             int resume = show_pause_menu();
             if (!resume) {
                 exit_state = MENU_STATE_HOME;
@@ -391,13 +385,8 @@ MenuState Game1_Run(void) {
         }
 
         if (current_input.btn3_pressed) {
-            if (!game_over) {
-                hard_drop();
-                block_landed = 1;
-            } else {
-                exit_state = MENU_STATE_HOME;
-                break;
-            }
+            hard_drop();
+            block_landed = 1;
         }
 
         /* --- BLOCK FALLING --- */
@@ -432,11 +421,9 @@ MenuState Game1_Run(void) {
         LCD_printString("Next:", NEXT_BLOCK_X + 5, NEXT_BLOCK_Y - 14, 1, 1);
         draw_next_block();
 
-        if (!game_over) {
-            /* Control hints – tucked in the left score-panel column */
-            LCD_printString("B3=drop", 2, 213, 13, 1);
-            LCD_printString("B2=pause", 2, 223, 13, 1);
-        }
+        /* Control hints – tucked in the left score-panel column */
+        LCD_printString("B3=drop", 2, 213, 13, 1);
+        LCD_printString("B2=pause", 2, 223, 13, 1);
 
         Score_Draw(&cfg0);
 
@@ -460,14 +447,11 @@ MenuState Game1_Run(void) {
             current_block.col = (TETRIS_COLS - 4) / 2;
             for (int i = 0; i < NEXT_BLOCK_COUNT - 1; i++) next_blocks[i] = next_blocks[i + 1];
             next_blocks[NEXT_BLOCK_COUNT - 1] = make_block_public(random_block());
-            next_block = next_blocks[0];
-            trail_reset();
             block_landed = 0;
 
             /* Game over check */
             if (!can_place(current_block.type, current_block.rotation,
                            current_block.row, current_block.col)) {
-                game_over = 1;
                 show_game_over_screen(Score_Get());
                 exit_state = MENU_STATE_HOME;
                 break;

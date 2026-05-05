@@ -8,7 +8,6 @@ extern Buzzer_cfg_t buzzer_cfg;
 /* ---- Game state ---- */
 uint8_t    tetris_grid[TETRIS_ROWS][TETRIS_COLS];
 BlockState current_block;
-BlockState next_block;                       /* alias for next_blocks[0] */
 BlockState next_blocks[NEXT_BLOCK_COUNT];
 int        last_lines_cleared = 0;
 
@@ -30,7 +29,6 @@ void init_next_blocks(void) {
     for (int i = 0; i < NEXT_BLOCK_COUNT; i++) {
         next_blocks[i] = make_block(random_block());
     }
-    next_block = next_blocks[0]; /* keep alias in sync */
 }
 
 /* ---- Logic functions ---- */

@@ -160,7 +160,7 @@ void TankEngine_Update(TankEngine_t* engine, UserInput input) {
     // Update all enemies
     // Base location (bottom center of map)
     uint16_t base_x = (MAP_WIDTH * TILE_SIZE / 2);
-    uint16_t base_y = MAP_OFFSET_Y + (MAP_HEIGHT * TILE_SIZE);
+    uint16_t base_y = MAP_OFFSET_Y + (MAP_HEIGHT * TILE_SIZE)- 10; // Slightly above bottom edge
     
     for (uint8_t i = 0; i < engine->num_enemies; i++) {
         if (engine->enemies[i].alive) {
@@ -249,9 +249,9 @@ void TankEngine_Update(TankEngine_t* engine, UserInput input) {
             continue;
         }
         // Check if bullet hits the base area (we can define it as the bottom center of the map)
-        if (engine->bullets[b].y > MAP_OFFSET_Y + (MAP_HEIGHT * TILE_SIZE) - 30 &&
-            engine->bullets[b].x > (MAP_WIDTH * TILE_SIZE / 2) - 20 &&
-            engine->bullets[b].x < (MAP_WIDTH * TILE_SIZE / 2) + 20) {
+        if (engine->bullets[b].y > MAP_OFFSET_Y + (MAP_HEIGHT * TILE_SIZE) - 20 &&
+            engine->bullets[b].x > (MAP_WIDTH * TILE_SIZE / 2) - 15 &&
+            engine->bullets[b].x < (MAP_WIDTH * TILE_SIZE / 2) + 15) {
             
             // Base hit!
             engine->base_health--;
